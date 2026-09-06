@@ -16,8 +16,8 @@ const tokens = read("tokens.css");
 /** Classes the UI writes into the DOM that must have a rule behind them. */
 const REQUIRED = [
   ".wrap", ".mast", ".hero", ".wordmark",
-  ".mapwrap", ".landfill", ".node", ".nolabel", ".labelhit",
-  ".maphead",
+  ".maphead", ".civlist", ".civrow", ".civbtn", ".civswatch", ".civflag",
+  ".civname", ".civnone",
   ".finder", ".finder-note", ".prompt", ".backmap",
   ".rhead", ".ident", ".ident-flag", ".ident-counts", ".regionfoot",
   ".tlouter", ".tlbar", ".tlhint", ".tlnav", ".tlbtn", ".tlscroll", ".tlinner",

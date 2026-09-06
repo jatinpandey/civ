@@ -1,10 +1,13 @@
 import "./styles/tokens.css";
 import "./styles/app.css";
+import { initAnalytics } from "./lib/analytics";
 
 import { byId } from "./data/regions";
 import { setRegionNavigator } from "./ui/drawer";
-import { drawMap, highlightMatches, markMapActive, matchRegions } from "./ui/map";
+import { drawList, filterList, markListActive, matchRegions } from "./ui/picker";
 import { renderRibbon } from "./ui/timeline";
+
+initAnalytics();
 
 const el = (id: string): HTMLElement =>
   document.getElementById(id) as HTMLElement;
@@ -19,7 +22,7 @@ function showRegion(id: string): void {
   if (!region) return;
   promptEl.classList.add("hide");
   regionEl.classList.remove("hide");
-  markMapActive(id);
+  markListActive(id);
 
   el("rflag").textContent = region.flag;
   el("rkick").textContent =
@@ -31,23 +34,17 @@ function showRegion(id: string): void {
   regionEl.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-drawMap(showRegion);
+drawList(showRegion);
 setRegionNavigator(showRegion);
 
 /* ---------------------------------------------------------- search ------ */
 
 function runSearch(): void {
   const q = searchEl.value;
-  const hits = matchRegions(q);
-
-  if (!q.trim()) {
-    highlightMatches(null);
-    noteEl.textContent = "";
-    return;
-  }
-  highlightMatches(new Set(hits.map((r) => r.id)));
-  noteEl.textContent =
-    hits.length === 0
+  const hits = filterList(q);
+  noteEl.textContent = !q.trim()
+    ? ""
+    : hits.length === 0
       ? "no match"
       : hits.length === 1
         ? `${hits[0]!.name} — press enter`
@@ -72,10 +69,9 @@ searchEl.addEventListener("keydown", (e) => {
   }
 });
 
-/* ------------------------------------------------------ back to map ----- */
+/* -------------------------------------------------- back to the list ---- */
 
 el("backmap").addEventListener("click", () => {
-  el("mapwrap").scrollIntoView({ behavior: "smooth", block: "start" });
+  el("civlist").scrollIntoView({ behavior: "smooth", block: "start" });
   searchEl.focus({ preventScroll: true });
 });
-

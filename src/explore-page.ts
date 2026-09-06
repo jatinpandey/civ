@@ -6,8 +6,11 @@ import type { Topology, GeometryCollection } from 'topojson-specification';
 import type { FeatureCollection, Geometry, MultiLineString, Point } from 'geojson';
 import { antimeridianSafeOutline, countryZoom, searchCountries } from './lib/explore';
 import type { ExploreCountry } from './lib/explore';
+import { initAnalytics } from './lib/analytics';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './styles/explore.css';
+
+initAnalytics();
 
 const el=<T extends HTMLElement>(id:string)=>document.getElementById(id) as T;
 const search=el<HTMLInputElement>('explore-search'),dropdown=el('search-dropdown'),message=el('map-message');
@@ -106,8 +109,32 @@ async function start():Promise<void>{
   let style:StyleSpecification;
   try{const r=await fetch(styleUrl,{signal:AbortSignal.timeout(10000)});if(!r.ok)throw new Error();style=await r.json() as StyleSpecification;}
   catch{styleOnline=false;style={version:8,glyphs:'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',sources:{},layers:[{id:'outside-map',type:'background',paint:{'background-color':outsideMapColor}}]};notice('Street detail is unavailable. Country outlines and capital pins are available.',true);}
-  for(const layer of style.layers){if(layer.type==='background')layer.paint={...layer.paint,'background-color':outsideMapColor};if(layer.type==='symbol'&&layer.layout?.['text-field']&&layer['source-layer']==='place')layer.layout['text-field']=['coalesce',['get','name:en'],['get','name:latin'],['get','name']];if(layer.id==='label_city_capital'&&layer.type==='symbol')layer.paint={...layer.paint,'text-color':'#a93f34','text-halo-color':'#fffef7','text-halo-width':2};if(layer.id==='water'&&layer.type==='fill')layer.paint={...layer.paint,'fill-color':'#b8dce7'};}
-  map=new MapLibre({container:'explore-map',style,center:[0,20],zoom:0,minZoom:-2,maxZoom:19,renderWorldCopies:false,dragRotate:false,pitchWithRotate:false,touchPitch:false,maxPitch:0,attributionControl:false});
+  /**
+   * This map is for finding countries and capitals, not for driving. Liberty
+   * ships 111 layers and 74 of them are streets, buildings, rail and airports.
+   * In a z12 tile over London the transportation layer alone is 57% of the
+   * geometry, and MapLibre's worker only decodes source-layers some style
+   * layer actually references — so dropping them skips that decode and the
+   * GPU buffers behind it, on every tile.
+   */
+  const keepSourceLayers=new Set(['water','waterway','water_name','landcover','landuse','park','boundary','place']);
+  style.layers=style.layers.filter(l=>{
+   if(l.type==='background')return true;
+   if(l.type==='fill-extrusion')return false;               // 3D buildings
+   if((l as {source?:string}).source==='ne2_shaded')return false;  // raster hillshade
+   const sl=(l as {'source-layer'?:string})['source-layer'];
+   return !!sl&&keepSourceLayers.has(sl);
+  });
+  /* Nothing references the hillshade raster any more. */
+  delete (style.sources as Record<string,unknown>)['ne2_shaded'];
+  /* Stop fetching tiles deeper than this and overzoom instead: tiles are
+     ~200-300 KB at every zoom, so the win is in how many distinct ones get
+     fetched and cached while panning, not in the size of each. A style source
+     overrides the TileJSON it loads, so this sticks. */
+  const vector=(style.sources as Record<string,{maxzoom?:number}>)['openmaptiles'];
+  if(vector)vector.maxzoom=8;
+  for(const layer of style.layers){if(layer.type==='background')layer.paint={...layer.paint,'background-color':outsideMapColor};if(layer.type==='symbol'&&layer.layout?.['text-field']&&layer['source-layer']==='place')layer.layout['text-field']=['coalesce',['get','name:en'],['get','name:latin'],['get','name']];if(layer.id.startsWith('label_country_')&&layer.type==='symbol'&&layer.layout?.['text-size'])layer.layout['text-size']=['*',layer.layout['text-size'],.88] as typeof layer.layout['text-size'];if(layer.id==='label_city_capital'&&layer.type==='symbol')layer.paint={...layer.paint,'text-color':'#a93f34','text-halo-color':'#fffef7','text-halo-width':2};if(layer.id==='water'&&layer.type==='fill')layer.paint={...layer.paint,'fill-color':'#b8dce7'};}
+  map=new MapLibre({container:'explore-map',style,center:[0,20],zoom:0,minZoom:-2,maxZoom:19,maxTileCacheSize:40,renderWorldCopies:false,dragRotate:false,pitchWithRotate:false,touchPitch:false,maxPitch:0,attributionControl:false});
   if(import.meta.env.DEV)(window as unknown as {exploreMap:MapLibre}).exploreMap=map;
   map.touchZoomRotate.disableRotation();map.addControl(new NavigationControl({showCompass:false}),'top-right');map.addControl(new ScaleControl({maxWidth:110,unit:'metric'}),'bottom-left');
   map.once('style.load',addData);home(false);

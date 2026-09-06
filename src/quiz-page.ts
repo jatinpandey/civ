@@ -3,7 +3,14 @@ import "./styles/app.css";
 
 import { CONTINENTS, QUESTIONS, continentLabel } from "./data/quiz";
 import type { Continent, Question } from "./data/quiz";
+import { initAnalytics } from "./lib/analytics";
 import { esc } from "./lib/format";
+import {
+  trackQuizOutcome,
+  trackQuizProgress,
+  trackQuizStarted,
+} from "./lib/quiz-analytics";
+import type { QuizOutcome } from "./lib/quiz-analytics";
 import {
   completedQuestions,
   questionProgress,
@@ -102,12 +109,13 @@ function start(): void {
   quizEl.classList.remove("hide");
   runningEl.classList.remove("hide");
   drawContinents(true);          // locked in for the set
+  trackQuizStarted([...chosen].map(continentLabel));
   ask();
 }
 
 function ask(): void {
   const q = set[at];
-  if (!q) return finish();
+  if (!q) return finish("finished");
   answered = false;
 
   const options = shuffle([q.a, ...shuffle(q.d).slice(0, 3)]);
@@ -134,6 +142,7 @@ function answer(btn: HTMLButtonElement): void {
   const correct = btn.dataset["o"] === q.a;
   if (correct) right += 1;
   answers.push({ question: q, answer: btn.dataset["o"] ?? "", correct });
+  trackQuizProgress(answers.length);
 
   optionsEl.querySelectorAll<HTMLButtonElement>(".qopt").forEach((b) => {
     b.disabled = true;
@@ -149,7 +158,7 @@ function answer(btn: HTMLButtonElement): void {
 
 /* ------------------------------------------------------------- done ----- */
 
-function finish(): void {
+function finish(outcome: QuizOutcome): void {
   quizEl.classList.add("hide");
   doneEl.classList.remove("hide");
   runningEl.classList.add("hide");
@@ -164,6 +173,7 @@ function finish(): void {
   el("qscoreline").textContent = completed === 0
     ? "No countries answered."
     : `${pct}% — ${completed} ${completed === 1 ? "country" : "countries"} answered.`;
+  trackQuizOutcome(outcome, right, completed);
   drawAnswerReview();
   (el("qagain") as HTMLButtonElement).focus();
 }
@@ -194,7 +204,7 @@ function advance(): void {
 nextEl.addEventListener("click", advance);
 startEl.addEventListener("click", start);
 el("qagain").addEventListener("click", toSetup);
-exitEl.addEventListener("click", finish);
+exitEl.addEventListener("click", () => finish("exit"));
 document.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && answered && !quizEl.classList.contains("hide")) {
     /* The focused Next button emits its own click after Enter. Let that native
@@ -205,4 +215,5 @@ document.addEventListener("keydown", (e) => {
   }
 });
 
+initAnalytics();
 toSetup();

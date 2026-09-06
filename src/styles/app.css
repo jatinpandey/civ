@@ -72,64 +72,6 @@ a { color: var(--gold); text-underline-offset: 3px; }
 }
 .hero p { font-size: 17px; line-height: 1.65; color: var(--dim); margin: 0; }
 
-/* ---------- map ---------- */
-.mapwrap { margin: 0; overflow-x: auto; overflow-y: hidden; padding-bottom: 6px; }
-.mapwrap svg { display: block; min-width: 760px; width: 100%; height: auto; }
-
-/* Natural Earth 110m outlines, projected at build time. */
-.landfill { fill: #141824; stroke: #232a3a; stroke-width: .5; }
-.landborder { fill: none; stroke: #1e2432; stroke-width: .5; }
-.landfill, .landborder { vector-effect: non-scaling-stroke; }
-
-.grat { stroke: rgba(51, 59, 77, .38); stroke-width: .6; fill: none; }
-.grat-eq { stroke: rgba(51, 59, 77, .7); stroke-width: .8; stroke-dasharray: 4 5; fill: none; }
-.gratlabel { font-family: var(--sans); font-size: 8.5px; fill: var(--dimmer); letter-spacing: .12em; }
-
-.node { cursor: pointer; }
-.node circle.dot { stroke: var(--bg); stroke-width: 1.5; transition: r .12s; }
-
-/* No box around the selected place. A rectangle around a dot on a map reads as
-   a second shape that means something; the halo and the lit label do the job,
-   and they double as the keyboard focus indicator. */
-.node:focus, .node:focus-visible,
-.locator:focus, .locator:focus-visible { outline: none; }
-.node:focus-visible circle.halo { opacity: .34; }
-.node:focus-visible text { fill: var(--ink); }
-.locator:focus-visible rect { opacity: 1; stroke-width: 1.2; }
-.node circle.hit { fill: transparent; }
-/* Portugal and Spain are 17px apart and their dots can never both be
-   comfortable targets. Their names are 100px apart, so the name is a target
-   too — sized to the label the placement algorithm actually chose. */
-.node rect.labelhit { fill: transparent; }
-.node.nolabel rect.labelhit { pointer-events: none; }
-.node text {
-  font-family: var(--sans);
-  font-size: 9.5px;
-  letter-spacing: .06em;
-  fill: var(--dim);
-  transition: fill .12s;
-  paint-order: stroke;
-  stroke: var(--bg);
-  stroke-width: 2.5px;
-  stroke-linejoin: round;
-}
-.node line { display: none; }
-.node.has-leader line { display: block; stroke: #596273; stroke-width: .85; }
-.node:hover text, .node.on text { fill: var(--ink); }
-
-/* Once something is picked, everything else steps back a little. */
-svg.picked .node:not(.on) text { fill: #464e5f; }
-svg.picked .node:not(.on):hover text { fill: var(--ink); }
-svg.picked .speck:not(.on) { opacity: .26; }
-.speck.on { opacity: 1; }
-.locator.on rect { opacity: .9; }
-/* The halo is 13 units wide and invisible, but it still hit-tests: Spain's
-   halo sat on top of Portugal's dot and swallowed every click meant for it.
-   Same for the leader line, which can cross a neighbour. */
-.node circle.halo { opacity: 0; transition: opacity .12s; pointer-events: none; }
-.node line { pointer-events: none; }
-.node:hover circle.halo, .node.on circle.halo { opacity: .28; }
-
 /* ---------- map header ---------- */
 .maphead {
   display: flex;
@@ -184,6 +126,47 @@ svg.picked .speck:not(.on) { opacity: .26; }
   margin-bottom: 22px;
 }
 .backmap:hover { color: var(--ink); border-color: var(--line2); }
+
+/* ---------- civilisation list ---------- */
+.civlist {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 8px;
+}
+.civrow.hide { display: none; }
+.civbtn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 13px 15px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, .02);
+  transition: background .12s, border-color .12s;
+}
+.civbtn:hover { background: rgba(255, 255, 255, .06); border-color: var(--line2); }
+.civrow.on .civbtn { border-color: var(--gold); background: rgba(216, 178, 95, .07); }
+/* The one thing the map still contributed: each civilisation's own colour. */
+.civswatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex: 0 0 auto;
+}
+.civflag { font-size: 19px; line-height: 1; flex: 0 0 auto; }
+.civname { font-size: 16px; color: var(--ink); flex: 1 1 auto; }
+.civnone {
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: .18em;
+  color: var(--dimmer);
+  padding: 24px 0 0;
+}
+.civnone.hide { display: none; }
 
 /* ---------- region head ---------- */
 .rhead { padding: 44px 0 22px; }

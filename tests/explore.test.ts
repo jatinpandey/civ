@@ -48,6 +48,11 @@ describe('alternate map country and capital data',()=>{
   expect(styles).toContain('#explore-search{border:0');
   expect(styles).toContain('#explore-search:focus-visible{outline:0}');
  });
+ it('slightly reduces basemap country-label sizes',()=>{
+  const source=readFileSync('src/explore-page.ts','utf8');
+  expect(source).toContain("layer.id.startsWith('label_country_')");
+  expect(source).toContain("['*',layer.layout['text-size'],.88]");
+ });
  it('splits selected-country outlines at the antimeridian',()=>{
   const outline=antimeridianSafeOutline({type:'Polygon',coordinates:[[
    [170,60],[180,65],[-180,65],[-170,60],[170,60],

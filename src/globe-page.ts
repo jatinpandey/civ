@@ -7,6 +7,9 @@ import { feature } from 'topojson-client';
 import type { Topology, GeometryCollection } from 'topojson-specification';
 import { angles, quaternion, multiply, cartesian, delta, power } from './lib/globe-rotation';
 import type { Quaternion } from './lib/globe-rotation';
+import { initAnalytics } from './lib/analytics';
+
+initAnalytics();
 
 type Country = Feature<Geometry, {name:string;capital:string;center:[number,number];small:boolean}>;
 const el = <T extends HTMLElement>(id:string) => document.getElementById(id) as T;

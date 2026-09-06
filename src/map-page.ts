@@ -2,7 +2,10 @@ import "./styles/tokens.css";
 import "./styles/app.css";
 
 import { COUNTRIES, MAP_H, MAP_W } from "./data/countries";
+import { initAnalytics } from "./lib/analytics";
 import { esc } from "./lib/format";
+
+initAnalytics();
 
 const wrap = document.getElementById("worldwrap") as HTMLElement;
 const tip = document.getElementById("worldtip") as HTMLElement;

@@ -18,20 +18,18 @@
     <a class="wordmark" href="/">CIV</a>
     <nav aria-label="Main navigation">
       <a href="/civilizations" aria-current="page">CIVILIZATIONS</a>
-      <a href="/explore">EXPLORE</a>
-      <a href="/quiz">QUIZ</a>
+      <!-- Explore hidden for now — restore this exact line when asked: <a href="/explore">EXPLORE</a> -->
+      <a href="/quiz">CAPITALS</a>
     </nav>
   </header>
 
   <main>
     <section class="hero" id="hero">
       <h1>Every civilisation's story, in one place.</h1>
-      <p>Pick a place on the map and browse its history, as well as iconic events in
-         each period.</p>
     </section>
 
     <div class="maphead">
-      <p class="prompt" id="prompt">TAP A CIVILISATION ON THE MAP TO BEGIN</p>
+      <p class="prompt" id="prompt">PICK A COUNTRY TO LEARN MORE</p>
       <div class="finder">
         <input id="search" type="search" placeholder="Search civilisations…"
                autocomplete="off" spellcheck="false" aria-label="Search civilisations"
@@ -40,7 +38,8 @@
       </div>
     </div>
 
-    <div class="mapwrap" id="mapwrap"></div>
+    <ul class="civlist" id="civlist" aria-label="Civilisations"></ul>
+    <p class="civnone hide" id="civnone">No civilisation matches that.</p>
 
     <section id="region" class="hide">
       <div class="rhead">

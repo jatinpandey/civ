@@ -20,28 +20,27 @@ import { india } from "./india";
 import { china } from "./china";
 import { japan } from "./japan";
 
-/** Poster order: Americas and Oceania, then Atlantic and Mediterranean Europe, then Asia. */
 export const REGIONS: Region[] = [
-  usa,
-  canada,
-  mexico,
-  argentina,
-  australia,
-  uk,
-  portugal,
-  spain,
-  france,
-  italy,
-  germany,
-  austria,
-  greece,
-  turkey,
-  egypt,
-  iraq,
-  iran,
   india,
   china,
   japan,
+  egypt,
+  turkey,
+  iraq,
+  iran,
+  italy,
+  greece,
+  uk,
+  usa,
+  argentina,
+  spain,
+  france,
+  portugal,
+  germany,
+  austria,
+  australia,
+  canada,
+  mexico,
 ];
 
 export const byId = (id: string): Region | undefined =>
