@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b0d12">
+<title>Atlas of Elapsed Time</title>
+<style>
+:root{
+  --bg:#0b0d12;
+  --bg2:#11141c;
+  --panel:#151924;
+  --line:#242a38;
+  --line2:#333b4d;
+  --ink:#e6e2d8;
+  --dim:#8c95a6;
+  --dimmer:#5f6878;
+  --gold:#d8b25f;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --sans:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
+  font-family:var(--serif);-webkit-font-smoothing:antialiased}
+body{overflow-x:hidden}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;padding:0}
+a{color:var(--gold);text-underline-offset:3px}
+:focus-visible{outline:1px solid var(--gold);outline-offset:3px}
+
+.wrap{max-width:1180px;margin:0 auto;padding:0 22px}
+
+/* ---------- masthead ---------- */
+.mast{display:flex;justify-content:space-between;align-items:center;
+  padding:20px 0 18px;border-bottom:1px solid var(--line)}
+.wordmark{font-family:var(--sans);font-size:11px;letter-spacing:.22em;color:var(--ink)}
+.mast nav{font-family:var(--sans);font-size:11px;letter-spacing:.18em;color:var(--dim);
+  display:flex;gap:18px}
+.mast nav button:hover{color:var(--ink)}
+
+/* ---------- hero ---------- */
+.hero{padding:56px 0 14px;max-width:34em}
+.hero .kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--dim);
+  margin-bottom:20px}
+.hero h1{font-size:clamp(38px,7vw,64px);line-height:1.02;margin:0 0 18px;font-weight:400;
+  letter-spacing:-.015em}
+.hero p{font-size:17px;line-height:1.65;color:var(--dim);margin:0}
+
+/* ---------- map ---------- */
+.mapwrap{margin:26px 0 0;overflow-x:auto;overflow-y:hidden;padding-bottom:6px}
+.mapwrap svg{display:block;min-width:860px;width:100%;height:auto}
+.grat{stroke:var(--line);stroke-width:.6;fill:none}
+.grat-eq{stroke:var(--line2);stroke-width:.8;stroke-dasharray:4 5}
+.gratlabel{font-family:var(--sans);font-size:8.5px;fill:var(--dimmer);letter-spacing:.12em}
+.node{cursor:pointer}
+.node circle.dot{stroke:var(--bg);stroke-width:1.5;transition:r .12s}
+.node text{font-family:var(--sans);font-size:9.5px;letter-spacing:.06em;fill:var(--dim);
+  transition:fill .12s}
+.node line{stroke:var(--line2);stroke-width:.7}
+.node:hover text,.node.on text{fill:var(--ink)}
+.node:hover circle.halo,.node.on circle.halo{opacity:.28}
+.node circle.halo{opacity:0;transition:opacity .12s}
+
+/* ---------- region strip ---------- */
+.strip{display:flex;flex-wrap:wrap;gap:6px;padding:22px 0 40px;border-bottom:1px solid var(--line)}
+.chip{font-family:var(--sans);font-size:11.5px;letter-spacing:.04em;color:var(--dim);
+  padding:5px 10px;border:1px solid var(--line);border-radius:2px}
+.chip:hover{color:var(--ink);border-color:var(--line2)}
+.chip.on{color:var(--bg);font-weight:600}
+
+/* ---------- region head ---------- */
+.rhead{padding:44px 0 22px}
+.rhead .kick{font-family:var(--sans);font-size:11px;letter-spacing:.2em;color:var(--dim);
+  margin-bottom:14px;display:flex;gap:14px;align-items:center}
+.rhead h2{font-size:clamp(30px,5vw,46px);margin:0 0 14px;font-weight:400;letter-spacing:-.01em}
+.rhead p{font-size:17px;line-height:1.62;color:var(--dim);margin:0;max-width:40em}
+
+/* ---------- timeline ---------- */
+.tlouter{position:relative;border-top:1px solid var(--line);margin-top:26px}
+.tlhint{font-family:var(--sans);font-size:10.5px;letter-spacing:.16em;color:var(--dimmer);
+  padding:12px 0 0}
+.tlscroll{overflow-x:auto;overflow-y:hidden;padding:10px 0 34px;
+  scrollbar-color:var(--line2) transparent}
+.tlscroll::-webkit-scrollbar{height:8px}
+.tlscroll::-webkit-scrollbar-thumb{background:var(--line2);border-radius:4px}
+.canvas{position:relative}
+
+.eraband{position:absolute;top:0;height:16px;border-left:1px solid var(--line);
+  font-family:var(--sans);font-size:9px;letter-spacing:.14em;color:var(--dimmer);
+  padding-left:6px;white-space:nowrap;overflow:hidden}
+.gridline{position:absolute;top:16px;bottom:0;width:1px;background:var(--line)}
+.ytick{position:absolute;top:20px;font-family:var(--sans);font-size:9.5px;color:var(--dimmer);
+  padding-left:5px;white-space:nowrap}
+
+.lanelabel{position:absolute;left:0;font-family:var(--sans);font-size:9px;letter-spacing:.16em;
+  color:var(--dimmer)}
+
+.blk{position:absolute;height:66px;border-radius:2px;overflow:hidden;
+  border:1px solid rgba(0,0,0,.45);cursor:pointer;transition:filter .12s}
+.blk:hover,.blk.sel{filter:brightness(1.28)}
+.blk .bn{position:absolute;left:7px;top:7px;right:5px;font-size:12.5px;line-height:1.2;
+  color:#0d0f14;font-weight:600;letter-spacing:.005em}
+.blk .by{position:absolute;left:7px;bottom:6px;font-family:var(--sans);font-size:9px;
+  color:rgba(13,15,20,.62);letter-spacing:.05em}
+.blk.thin .bn,.blk.thin .by{display:none}
+
+.pin{position:absolute;cursor:pointer;display:flex;align-items:center;gap:5px;
+  white-space:nowrap;transition:color .12s}
+.pin i{width:7px;height:7px;border-radius:50%;flex:0 0 auto;display:block}
+.pin span{font-family:var(--sans);font-size:10.5px;color:var(--dim);letter-spacing:.02em}
+.pin:hover span,.pin.sel span{color:var(--ink)}
+.pin.world i{border-radius:0;transform:rotate(45deg);width:6px;height:6px}
+.stem{position:absolute;width:1px;background:var(--line2)}
+
+.worldrule{position:absolute;height:1px;background:var(--line);left:0}
+
+/* ---------- drawer ---------- */
+.scrim{position:fixed;inset:0;background:rgba(4,5,8,.62);opacity:0;pointer-events:none;
+  transition:opacity .18s;z-index:40}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(440px,100%);background:var(--bg2);
+  border-left:1px solid var(--line);z-index:50;transform:translateX(102%);
+  transition:transform .22s ease;overflow-y:auto;padding:26px 28px 60px}
+.drawer.on{transform:none}
+.drawer .close{position:absolute;top:18px;right:20px;font-family:var(--sans);font-size:10px;
+  letter-spacing:.18em;color:var(--dim)}
+.drawer .close:hover{color:var(--ink)}
+.dkick{font-family:var(--sans);font-size:10px;letter-spacing:.2em;margin-bottom:16px}
+.drawer h3{font-size:29px;line-height:1.12;margin:0 0 6px;font-weight:400;letter-spacing:-.01em;
+  max-width:14em}
+.dwhen{font-family:var(--sans);font-size:11.5px;color:var(--gold);letter-spacing:.05em;
+  margin-bottom:20px}
+.dbody p{font-size:15.5px;line-height:1.68;color:#cfcabf;margin:0 0 14px;max-width:34em}
+.meta{border-top:1px solid var(--line);margin-top:26px;padding-top:18px}
+.meta dt{font-family:var(--sans);font-size:9.5px;letter-spacing:.18em;color:var(--dimmer);
+  margin-bottom:5px}
+.meta dd{margin:0 0 16px;font-size:14px;line-height:1.6;color:var(--dim)}
+.meta dd a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(216,178,95,.3)}
+.meta dd a:hover{border-bottom-color:var(--gold)}
+.simul{display:block;font-size:13.5px;color:var(--dim);line-height:1.75}
+.simul b{color:#cfcabf;font-weight:400}
+.simul em{font-style:normal;color:var(--dimmer)}
+
+/* ---------- about ---------- */
+.about{padding:50px 0 10px;max-width:36em;display:none}
+.about.on{display:block}
+.about h2{font-size:34px;font-weight:400;margin:0 0 22px;letter-spacing:-.01em}
+.about p{font-size:16.5px;line-height:1.7;color:var(--dim);margin:0 0 18px}
+.about blockquote{margin:0 0 26px;padding-left:18px;border-left:1px solid var(--line2);
+  font-size:19px;line-height:1.5;color:#cfcabf}
+.about blockquote cite{display:block;font-family:var(--sans);font-size:10.5px;
+  letter-spacing:.16em;color:var(--dimmer);font-style:normal;margin-top:12px}
+
+footer{border-top:1px solid var(--line);margin-top:56px;padding:22px 0 48px;
+  font-family:var(--sans);font-size:11px;line-height:1.8;color:var(--dimmer);max-width:52em}
+
+.hide{display:none}
+
+@media (max-width:640px){
+  .drawer{width:100%;top:auto;bottom:0;height:82vh;border-left:none;
+    border-top:1px solid var(--line);border-radius:6px 6px 0 0;transform:translateY(102%);
+    padding:22px 20px 50px}
+  .drawer.on{transform:none}
+  .hero{padding:40px 0 8px}
+  .rhead{padding:32px 0 16px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="mast">
+    <button class="wordmark" id="home">ATLAS OF ELAPSED TIME</button>
+    <nav>
+      <button id="navAbout">ABOUT</button>
+    </nav>
+  </header>
+
+  <section class="hero" id="hero">
+    <div class="kick">TWENTY PLACES · TWELVE THOUSAND YEARS</div>
+    <h1>Every civilisation is somebody's neighbour.</h1>
+    <p>Pick a place on the map. Its whole political history unrolls left to right, with
+       the landmarks, inventions and world events that fell across it. Tap anything to
+       find out what it was.</p>
+  </section>
+
+  <div class="mapwrap" id="mapwrap"></div>
+  <div class="strip" id="strip"></div>
+
+  <section class="about" id="about"></section>
+
+  <section id="region">
+    <div class="rhead">
+      <div class="kick"><span id="rflag"></span><span id="rkick"></span></div>
+      <h2 id="rname"></h2>
+      <p id="rintro"></p>
+    </div>
+    <div class="tlouter">
+      <div class="tlhint">SCROLL SIDEWAYS &nbsp;→&nbsp; TAP ANY BLOCK OR MARKER</div>
+      <div class="tlscroll" id="tlscroll"><div class="canvas" id="canvas"></div></div>
+    </div>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true"></aside>
+
+<script>
+// Part 1 — Americas, Oceania, Atlantic west
+const REGIONS_1 = [
+{
+  id:"usa", name:"United States", flag:"🇺🇸", lon:-98, lat:39, hue:"#7FA9D8",
+  intro:"Four-fifths of this column is Indigenous, and the poster leaves it almost blank — a limit of the chart rather than of the history. The sites tell a different story.",
+  periods:[
+    {y:-12000, a:1, n:"Indigenous Era", d:"Hundreds of nations across the continent, from Iroquois confederacies to Puebloan farming towns.", x:"The poster compresses more than ten thousand years and enormous cultural variety into one block, because it is measuring named states and there were none in its sense.", w:"Indigenous_peoples_of_the_Americas"},
+    {y:1607, n:"Colonial America", d:"European colonies along the Atlantic seaboard.", x:"Jamestown in 1607 is the usual starting date; within a century the coastal colonies are dense enough to have their own politics.", w:"Colonial_history_of_the_United_States"},
+    {y:1776, n:"United States", d:"Independence, then continental expansion.", x:"The republic is founded on a coastal strip and reaches the Pacific within seventy years, at enormous cost to the people already there.", w:"History_of_the_United_States"}
+  ],
+  pins:[
+    {y:1100, t:"landmark", n:"Mesa Verde", d:"Cliff dwellings built into canyon alcoves in southwest Colorado by Ancestral Puebloan people. Hundreds of rooms tucked under overhanging sandstone, reached by hand-and-toe holds cut into the rock. Occupied until around 1300, when the whole region was abandoned during a prolonged drought.", w:"Mesa_Verde_National_Park"},
+    {y:1000, t:"landmark", n:"Chaco Canyon", d:"The centre of a Puebloan world around 850–1150 CE, with monumental multi-storey 'great houses' and dead-straight roads running for tens of miles across empty desert. Some buildings are aligned to lunar cycles that repeat only every 18.6 years.", w:"Chaco_Culture_National_Historical_Park"},
+    {y:1100, t:"landmark", n:"Cahokia", d:"An earthwork city across the Mississippi from modern St. Louis. At its peak around 1100 it held perhaps 15,000–20,000 people — larger than contemporary London — and its central mound covers a bigger footprint than the Great Pyramid. Abandoned by 1350 for reasons still argued about.", w:"Cahokia"},
+    {y:1886, t:"landmark", n:"Statue of Liberty", d:"A gift from France, dedicated in 1886, designed by Bartholdi with an internal iron framework by Gustave Eiffel. The association with immigration was not the original intent; it accumulated as millions of arrivals passed it on the way to Ellis Island.", w:"Statue_of_Liberty"},
+    {y:1969, t:"milestone", n:"Moon Landing", d:"Apollo 11 lands on 20 July 1969. Around 600 million people watch — at the time the largest shared human experience ever, and still the only occasion humans have stood on another world.", w:"Apollo_11"},
+    {y:1975, t:"milestone", n:"Digital Revolution", d:"The shift from analogue to digital computing and communication, running from the transistor in 1947 through the personal computer to the web. The poster marks it late in the column because its effects are still compounding.", w:"Digital_Revolution"}
+  ]
+},
+{
+  id:"canada", name:"Canada", flag:"🇨🇦", lon:-106, lat:56, hue:"#C9A08C",
+  intro:"A short political column with one of the longest continuously used sites on the whole chart at the top of it.",
+  periods:[
+    {y:-12000, a:1, n:"Indigenous Era", d:"Inuit, First Nations and Métis peoples across the northern half of the continent.", x:"The Métis are distinctive: a nation formed after contact, from Cree, Ojibwe and French-Canadian ancestry, with its own language and its own rebellions against Ottawa.", w:"Indigenous_peoples_in_Canada"},
+    {y:1608, n:"Colonial Canada", d:"French and then British colonial settlement.", x:"Champlain founds Quebec in 1608; Britain takes New France in 1763, which is why Canada has two founding languages rather than one.", w:"Canada_under_British_rule"},
+    {y:1867, n:"Canada", d:"Confederation joins the provinces into a dominion.", x:"Independence arrives gradually rather than by revolution — full legal autonomy is not complete until 1982.", w:"Canadian_Confederation"}
+  ],
+  pins:[
+    {y:-3700, t:"landmark", n:"Head-Smashed-In Buffalo Jump", d:"A cliff in Alberta over which Blackfoot people and their predecessors drove bison herds, using drive lanes built of stone cairns running for miles across the plain. In use for roughly 5,700 years, which makes it older than the pyramids and one of the longest-running sites anywhere on this chart.", w:"Head-Smashed-In_Buffalo_Jump"},
+    {y:1876, t:"landmark", n:"Parliament Hill", d:"The Gothic Revival seat of Canada's parliament in Ottawa, begun in the 1860s alongside Confederation. The main block burned in 1916 and was rebuilt.", w:"Parliament_Hill"},
+    {y:1921, t:"milestone", n:"Discovery of Insulin", d:"Banting, Best, Macleod and Collip isolate insulin in Toronto in 1921. Type 1 diabetes goes from a death sentence within months to a manageable condition. The patent was sold to the university for one dollar.", w:"Insulin"}
+  ]
+},
+{
+  id:"mexico", name:"Mexico", flag:"🇲🇽", lon:-102, lat:23, hue:"#E8AD48",
+  intro:"The densest of the American columns, with three thousand years of city-building before any European arrives.",
+  periods:[
+    {y:-2000, a:1, n:"Indigenous Era", d:"Olmec, then Maya, Zapotec, Teotihuacano, Toltec and finally Aztec.", x:"These are successive and overlapping civilizations sharing a calendar, a ballgame and a writing tradition — Mesoamerica is a cultural region in the way that Europe is.", w:"Mesoamerica"},
+    {y:1521, n:"Colonial Era", d:"New Spain, after the fall of Tenochtitlan.", x:"Cortés wins with perhaps 500 Spaniards and tens of thousands of Indigenous allies who had their own reasons to break Aztec power; smallpox does the rest.", w:"New_Spain"},
+    {y:1821, n:"Mexico", d:"Independence after an eleven-year war.", x:"The new republic loses half its territory to the United States within thirty years.", w:"History_of_Mexico"}
+  ],
+  pins:[
+    {y:-2000, t:"milestone", n:"Maize Cultivation", d:"The domestication of teosinte — a grass with a dozen hard seeds — into maize, over thousands of years of selection in southern Mexico. It is the agricultural achievement that made every later civilisation in the Americas possible, and it now feeds much of the world.", w:"Maize"},
+    {y:-400, t:"landmark", n:"Teotihuacán", d:"An enormous planned city near modern Mexico City, laid out on a grid around the Avenue of the Dead, peaking around 100–550 CE with over 100,000 people. Nobody knows what language its builders spoke or what they called it; the Aztecs found it long ruined and named it 'the place where gods were born'.", w:"Teotihuacan"},
+    {y:600, t:"milestone", n:"Maya Astronomy", d:"Naked-eye observation accurate enough to predict eclipses and track the cycle of Venus to within hours across centuries, recorded in bark-paper codices. The Maya also used a positional number system with a symbol for zero, developed independently of India.", w:"Maya_astronomy"},
+    {y:900, t:"landmark", n:"Chichén Itzá", d:"A Maya city in the Yucatán at its height around 800–1100. Its stepped pyramid is built so that at the equinoxes the afternoon sun throws a serpent-shaped shadow down the edge of the northern staircase.", w:"Chichen_Itza"}
+  ]
+},
+{
+  id:"argentina", name:"Argentina", flag:"🇦🇷", lon:-64, lat:-34, hue:"#C9A08C",
+  intro:"The Southern Cone stayed outside the reach of both Andean empires and, for a long time, of Spain.",
+  periods:[
+    {y:-10000, a:1, n:"Indigenous Era", d:"Mapuche, Guaraní, Diaguita and other peoples.", x:"The Mapuche were never conquered by the Inca and held off Spain and then Chile and Argentina into the 1880s.", w:"Mapuche"},
+    {y:1536, n:"Colonial Era", d:"Spanish settlement, and eventually the Viceroyalty of the Río de la Plata.", x:"Buenos Aires was founded twice — the first attempt in 1536 was abandoned — and stayed a peripheral smuggling port until 1776.", w:"Viceroyalty_of_the_Río_de_la_Plata"},
+    {y:1816, n:"Argentina", d:"Independence declared at Tucumán.", x:"Mass immigration from Italy and Spain between 1870 and 1930 remade the population and made Argentina, briefly, one of the richest countries on earth.", w:"History_of_Argentina"}
+  ],
+  pins:[
+    {y:1900, t:"milestone", n:"Tango", d:"Emerging around 1900 from the immigrant tenements and port districts of Buenos Aires and Montevideo — a fusion of African rhythm, European instruments and rural song. Disreputable at home until Paris took it up, after which the Argentine upper classes discovered they had always liked it.", w:"Tango"},
+    {y:1936, t:"landmark", n:"Obelisk of Buenos Aires", d:"Built in four weeks in 1936 for the city's 400th anniversary, on the Avenida 9 de Julio. It has been unpopular, condemned and repeatedly redecorated, and is now the default symbol of the city.", w:"Obelisco_de_Buenos_Aires"}
+  ]
+},
+{
+  id:"australia", name:"Australia", flag:"🇦🇺", lon:134, lat:-25, hue:"#5FBAAB",
+  intro:"The oldest continuous human culture on the poster, and the shortest political column.",
+  periods:[
+    {y:-50000, a:1, n:"Indigenous Era", d:"Aboriginal and Torres Strait Islander peoples, present for at least 50,000 years.", x:"Hundreds of distinct nations and language groups, with land management by fire and oral traditions that appear to preserve memory of sea-level rise at the end of the last ice age.", w:"Aboriginal_Australians"},
+    {y:1788, n:"Colonial Australia", d:"Penal settlement, then free colonies.", x:"The First Fleet lands in 1788; the colonies are governed separately for over a century and federate only in 1901.", w:"History_of_Australia_(1788–1850)"},
+    {y:1901, n:"Australia", d:"Federation of the six colonies.", x:"Indigenous Australians were not counted in the census until a referendum changed it in 1967.", w:"History_of_Australia"}
+  ],
+  pins:[
+    {y:-30000, t:"landmark", n:"Uluru", d:"A sandstone inselberg in the centre of the continent, the visible tip of a rock formation extending several kilometres underground. Sacred to the Anangu, whose association with it goes back tens of thousands of years; climbing it was permanently closed in 2019 at their request.", w:"Uluru"},
+    {y:1973, t:"landmark", n:"Sydney Opera House", d:"Jørn Utzon's shell-roofed building on the harbour, opened in 1973 — fourteen years late, fifteen times over budget, and with the architect having resigned and left the country before it was finished.", w:"Sydney_Opera_House"},
+    {y:1992, t:"milestone", n:"Wi-Fi Innovation", d:"Work by CSIRO radio-astronomers on cleaning up smeared radio signals — a problem originally from the search for exploding black holes — became a core patent underlying wireless networking.", w:"Wi-Fi"}
+  ]
+},
+{
+  id:"uk", name:"United Kingdom", flag:"🇬🇧", lon:-2, lat:54, hue:"#E8AD48",
+  intro:"The easiest chain on the whole chart to memorise, because the poster names each dynasty in turn.",
+  periods:[
+    {y:-800, a:1, n:"Celtic Era", d:"Iron Age tribal Britain.", x:"Stonehenge is already ancient by this point — finished around 1600 BCE, so the gap between its builders and the Celts is longer than the gap between the Celts and us.", w:"Prehistoric_Britain"},
+    {y:410, n:"Sub-Roman Britain", d:"After the Roman withdrawal.", x:"Rome had governed Britain for nearly four centuries; within two generations of leaving, towns, coinage and the villa economy have largely gone.", w:"Sub-Roman_Britain"},
+    {y:500, n:"Anglo-Saxon Era", d:"Formation of the early English kingdoms.", x:"Seven or so kingdoms compete until Viking pressure forces consolidation — which is how Wessex ends up on top.", w:"Anglo-Saxon_England"},
+    {y:829, n:"Wessex Dynasty", d:"The first dynasty to unify England.", x:"Alfred is the only English monarch called 'the Great', largely for holding out against the Danes and then building the institutions that outlasted him.", w:"House_of_Wessex"},
+    {y:1066, n:"Norman Dynasty", d:"Conquest, and a new aristocracy.", x:"The Conquest replaces almost the entire landholding class within twenty years, and pushes French vocabulary into English so thoroughly that the language still has parallel words for the animal and the meat.", w:"Norman_Conquest"},
+    {y:1154, n:"Plantagenet Dynasty", d:"Medieval England at its height.", x:"Magna Carta in 1215 and the first recognisable parliaments belong here, both products of kings needing money and barons setting terms.", w:"House_of_Plantagenet"},
+    {y:1485, n:"Tudor Dynasty", d:"The rise of maritime power.", x:"Henry VIII's break with Rome in the 1530s is as much a fiscal act as a religious one — the monasteries held a large share of England's land.", w:"House_of_Tudor"},
+    {y:1603, n:"Stuart Dynasty", d:"Union of crowns, civil war, restoration.", x:"England executes its king in 1649, tries a republic for eleven years, and decides against.", w:"House_of_Stuart"},
+    {y:1714, n:"Hanoverian Dynasty", d:"Britain's age of industry and empire.", x:"The period covers both the loss of the American colonies and the acquisition of India, and industrialisation transforms the country from the inside at the same time.", w:"House_of_Hanover"},
+    {y:1917, n:"United Kingdom", d:"The modern British state.", x:"1917 is when the royal house is renamed Windsor to shed its German name mid-war; the poster uses it as the marker for the modern era.", w:"United_Kingdom"}
+  ],
+  pins:[
+    {y:-2500, t:"landmark", n:"Stonehenge", d:"A stone circle on Salisbury Plain built in stages between roughly 3000 and 1600 BCE. The bluestones were brought from Wales, some 250 km away, by people without wheels or draught animals. Its axis aligns with midsummer sunrise and midwinter sunset.", w:"Stonehenge"},
+    {y:1070, t:"landmark", n:"Windsor Castle", d:"Begun by William the Conqueror after 1066 as one of a ring of forts around London, and continuously inhabited since — the oldest occupied castle in the world.", w:"Windsor_Castle"},
+    {y:1687, t:"milestone", n:"Laws of Motion & Gravity", d:"Newton's Principia, 1687, showing that the fall of an apple and the orbit of the Moon obey the same law. It is the founding demonstration that the universe is describable by mathematics, and it held without correction for over two centuries.", w:"Philosophiæ_Naturalis_Principia_Mathematica"},
+    {y:1776, t:"milestone", n:"Watt's Steam Engine", d:"Not the first steam engine — Newcomen's had been pumping water out of mines since 1712. Watt's separate condenser made it efficient enough to be worth running anywhere, which is what turned a mining pump into an industrial revolution.", w:"Watt_steam_engine"},
+    {y:1859, t:"landmark", n:"Big Ben", d:"Strictly the great bell inside the Elizabeth Tower at Westminster, hung in 1859 after the first casting cracked. The name has since migrated to the tower and the clock.", w:"Big_Ben"},
+    {y:1859, t:"milestone", n:"Natural Selection", d:"Darwin's On the Origin of Species, published in 1859 after twenty years of delay and only when Wallace independently reached the same idea. It supplies the mechanism that makes biology a single connected science.", w:"On_the_Origin_of_Species"}
+  ]
+},
+{
+  id:"portugal", name:"Portugal", flag:"🇵🇹", lon:-8, lat:39.5, hue:"#DE6A63",
+  intro:"Runs parallel to Spain for a thousand years, then splits decisively at the Atlantic.",
+  periods:[
+    {y:-600, a:1, n:"Lusitanians & Other Tribes", d:"Pre-Roman peoples of western Iberia.", x:"The Lusitanians resisted Rome for decades under Viriathus, who was eventually killed by his own envoys after they were bribed.", w:"Lusitanians"},
+    {y:-218, n:"Roman Republic", d:"Roman conquest of Iberia begins.", x:"Rome comes to Iberia to fight Carthage and stays for six centuries; Latin becomes the ancestor of Portuguese here.", w:"Hispania"},
+    {y:409, n:"Suebi Kingdom", d:"The first Germanic kingdom in Iberia.", x:"A small kingdom in the northwest, and one of the first in western Europe to convert to Catholic Christianity.", w:"Kingdom_of_the_Suebi"},
+    {y:585, n:"Visigothic Kingdom", d:"The first unified kingdom of Iberia.", x:"The Visigoths absorb the Suebi and rule almost the whole peninsula until 711, when it collapses within a few years.", w:"Visigothic_Kingdom"},
+    {y:711, n:"Al-Andalus", d:"Muslim rule in Iberia.", x:"Córdoba under the Umayyads was probably the largest city in western Europe, with libraries, street lighting and running water.", w:"Al-Andalus"},
+    {y:868, n:"First County of Portugal", d:"The foundation of early Portuguese identity.", x:"A frontier county of the Kingdom of Asturias, centred on Porto — the city that gives the country its name.", w:"County_of_Portugal"},
+    {y:1095, n:"Second County of Portugal", d:"Reconstituted under Burgundian rule.", x:"Granted to Henry of Burgundy; his son Afonso Henriques promptly turned it into a kingdom of his own.", w:"County_of_Portugal"},
+    {y:1139, n:"Kingdom of Portugal", d:"A maritime kingdom that reached the world.", x:"Its 1297 border with Castile is among the oldest continuously recognised frontiers in Europe.", w:"Kingdom_of_Portugal"},
+    {y:1580, n:"Iberian Union", d:"Portugal under the Spanish crown.", x:"A shared monarch rather than a merger — Portugal kept its own laws, currency and empire, but was dragged into Spain's wars and lost trading posts to the Dutch as a result.", w:"Iberian_Union"},
+    {y:1640, n:"Restored Kingdom of Portugal", d:"Independence regained.", x:"A palace coup in Lisbon in December 1640, followed by twenty-eight years of war to make it stick.", w:"Portuguese_Restoration_War"},
+    {y:1807, n:"Constitutional Monarchy", d:"Reform after the Peninsular War.", x:"With Napoleon invading, the entire court sailed to Brazil — the only time a European monarchy governed from its own colony.", w:"Kingdom_of_Portugal"},
+    {y:1910, n:"First Portuguese Republic", d:"The monarchy is overthrown.", x:"Sixteen years, forty-five governments, and a reputation for instability that helped justify what came next.", w:"First_Portuguese_Republic"},
+    {y:1933, n:"Estado Novo", d:"Authoritarian rule under Salazar.", x:"One of the longest-lived dictatorships in modern Europe, and the last to hold an African empire.", w:"Estado_Novo_(Portugal)"},
+    {y:1974, n:"Portugal", d:"Democracy after the Carnation Revolution.", x:"A near-bloodless military coup in April 1974, named for the flowers put into soldiers' rifle barrels.", w:"Carnation_Revolution"}
+  ],
+  pins:[
+    {y:1498, t:"milestone", n:"Route to India", d:"Vasco da Gama reaches Calicut in 1498, having sailed around Africa — the first sea route from Europe to Asia. It broke the Venetian and Ottoman hold on the spice trade and began four centuries of European maritime empire in the Indian Ocean.", w:"Vasco_da_Gama"},
+    {y:1501, t:"landmark", n:"Jerónimos Monastery", d:"Begun in 1501 in Lisbon, in the ornate Manueline style, and paid for with a tax on the spice trade da Gama had just opened. Da Gama is buried in it.", w:"Jerónimos_Monastery"},
+    {y:1519, t:"landmark", n:"Belém Tower", d:"A fortified tower built 1514–1519 to guard the mouth of the Tagus, and the point of departure and return for the voyages. It stood in the river; the earthquake of 1755 shifted the channel and left it at the bank.", w:"Belém_Tower"}
+  ]
+},
+{
+  id:"spain", name:"Spain", flag:"🇪🇸", lon:-3.7, lat:40.4, hue:"#E8AD48",
+  intro:"The single fact that shapes this column: 781 years pass between the Muslim conquest of 711 and the fall of Granada in 1492.",
+  periods:[
+    {y:-1200, a:1, n:"Iberian & Celtic Tribes", d:"Pre-Roman peoples of the peninsula.", x:"Tartessos in the southwest traded tin and silver with Phoenicians and became, to the Greeks, a byword for a rich half-legendary kingdom.", w:"Pre-Roman_peoples_of_the_Iberian_Peninsula"},
+    {y:-237, n:"Carthaginian Era", d:"Carthage expands into Iberia.", x:"Carthage came for silver and manpower after losing Sicily to Rome; Hannibal launched his march on Italy from here.", w:"Carthaginian_Iberia"},
+    {y:-218, n:"Roman Republic", d:"Rome takes the peninsula from Carthage.", x:"It took Rome two centuries to finish the conquest — far longer than Gaul — and Hispania later supplied emperors including Trajan and Hadrian.", w:"Hispania"},
+    {y:585, n:"Visigothic Kingdom", d:"The first unified kingdom of Iberia.", x:"Toledo becomes the capital and the Visigothic law codes survive into later Spanish law.", w:"Visigothic_Kingdom"},
+    {y:711, n:"Al-Andalus", d:"Muslim rule in Iberia.", x:"For three centuries the most sophisticated society in western Europe, and the channel through which Greek philosophy and Indian mathematics reached the Latin world.", w:"Al-Andalus"},
+    {y:718, n:"Kingdom of Asturias", d:"A key kingdom in the formation of medieval Spain.", x:"A small Christian holdout in the northern mountains, later claimed by every Spanish monarchy as its point of origin.", w:"Kingdom_of_Asturias"},
+    {y:910, n:"Kingdom of León", d:"Successor to Asturias.", x:"Its assemblies of 1188 included townsmen alongside nobles and clergy, and are sometimes called the earliest parliamentary body in Europe.", w:"Kingdom_of_León"},
+    {y:1238, n:"Late Reconquista", d:"The rise of regional kingdoms in Iberia.", x:"Castile and Aragon take almost everything in a few decades after 1212, leaving only Granada as a tributary emirate for another 250 years.", w:"Reconquista"},
+    {y:1479, n:"Unification of Spain", d:"The crowns of Castile and Aragon joined.", x:"Ferdinand and Isabella's marriage unites the crowns, not the kingdoms — Spain remains legally plural for centuries.", w:"Catholic_Monarchs"},
+    {y:1516, n:"Habsburg Spain", d:"The golden age of the Spanish empire.", x:"American silver funded European wars on a scale nobody could match, and bankrupted the crown repeatedly anyway.", w:"Habsburg_Spain"},
+    {y:1700, n:"Bourbon Reforms", d:"A new dynasty reshapes the empire.", x:"A French Bourbon inherits the throne, triggering a European war, and then centralises the state along French lines.", w:"Bourbon_Reforms"},
+    {y:1808, n:"Constitutional Era", d:"Upheaval and constitutional government.", x:"Napoleon's invasion sets off both a guerrilla war — the word is Spanish — and the collapse of the American empire.", w:"Peninsular_War"},
+    {y:1931, n:"Second Spanish Republic", d:"Republican government before civil war.", x:"Reformist, polarised and short: the coup of 1936 turned into a three-year war that drew in Germany, Italy and the Soviet Union.", w:"Second_Spanish_Republic"},
+    {y:1939, n:"Francoist Spain", d:"Dictatorship after the civil war.", x:"Thirty-six years of authoritarian rule, ending with Franco's death in 1975 and a negotiated transition rather than a rupture.", w:"Francoist_Spain"},
+    {y:1978, n:"Spain", d:"Democratic constitution adopted.", x:"The constitution restores a parliamentary monarchy and devolves substantial power to the regions.", w:"Spanish_transition_to_democracy"}
+  ],
+  pins:[
+    {y:-16000, t:"landmark", n:"Cave of Altamira", d:"Painted bison, horses and deer on a cave ceiling in northern Spain, using the natural bulges of the rock to give the animals volume. When first published in 1880 the paintings were dismissed as forgeries, because nobody believed Palaeolithic people could paint that well.", w:"Cave_of_Altamira"},
+    {y:1354, t:"landmark", n:"Alhambra", d:"The Nasrid palace-fortress above Granada, built mostly in the 13th and 14th centuries — the last court of Muslim Iberia and the most complete Islamic palace complex surviving anywhere. Its geometric tilework contains examples of every one of the seventeen mathematically possible wallpaper symmetries.", w:"Alhambra"},
+    {y:1492, t:"milestone", n:"Discovery of the Americas", d:"Columbus makes landfall in the Bahamas in October 1492, looking for Asia and convinced to his death that he had found it. The consequence is the Columbian Exchange: the permanent reconnection of two hemispheres separated for 12,000 years, with catastrophic results for the people already in one of them.", w:"Voyages_of_Christopher_Columbus"},
+    {y:1882, t:"landmark", n:"Sagrada Família", d:"Gaudí's Barcelona basilica, begun in 1882 and still unfinished. Gaudí worked on it for 43 years, latterly living on site, and left models rather than complete drawings — several of which were destroyed in 1936, so the later work is partly reconstruction of intent.", w:"Sagrada_Família"}
+  ]
+}
+];
+
+// Part 2 — continental Europe and the eastern Mediterranean
+const REGIONS_2 = [
+{
+  id:"france", name:"France", flag:"🇫🇷", lon:2.3, lat:46.6, hue:"#5E9E77",
+  intro:"Gaul, Frankish, Francia, France — the name evolves in a straight line while the state is rebuilt around it.",
+  periods:[
+    {y:-800, a:1, n:"Gaul", d:"The land of Celtic tribes.", x:"Some sixty tribes with towns, coinage and trade links to the Mediterranean — not the forest wilderness Caesar found it useful to describe.", w:"Gaul"},
+    {y:-58, n:"Roman Republic", d:"Caesar's conquest of Gaul.", x:"Eight years of campaigning that made Caesar rich and powerful enough to take Rome itself, and killed or enslaved a substantial share of the Gallic population.", w:"Gallic_Wars"},
+    {y:481, n:"Frankish Kingdom", d:"The foundation of medieval western Europe.", x:"Clovis unites the Franks and converts to Catholic rather than Arian Christianity — an alliance with the bishops that shaped the next thousand years.", w:"Francia"},
+    {y:843, n:"West Francia", d:"The birth of the French realm.", x:"The Treaty of Verdun splits Charlemagne's empire between three grandsons; the western third becomes France and the eastern third becomes Germany.", w:"West_Francia"},
+    {y:987, n:"Kingdom of France", d:"The rise of the French monarchy.", x:"The first Capetian kings control little more than the area around Paris; it takes 300 years of marriage, inheritance and war to make the kingdom real.", w:"Kingdom_of_France"},
+    {y:1589, n:"Bourbon France", d:"The age of absolute monarchy.", x:"Louis XIV reigns for 72 years, the longest of any European monarch, and makes the court itself an instrument of control.", w:"House_of_Bourbon"},
+    {y:1804, n:"First French Empire", d:"Napoleonic France.", x:"In a decade Napoleon redraws the map of Europe, exports the legal code still underlying much of continental law, and loses an army in Russia.", w:"First_French_Empire"},
+    {y:1815, n:"Republican France", d:"Restoration, revolution and republic.", x:"Between 1815 and 1870 France runs through two monarchies, a second republic and a second empire before settling into republican government.", w:"History_of_France"},
+    {y:1946, n:"France", d:"The Fourth and Fifth Republics.", x:"The Fifth Republic, designed by de Gaulle in 1958 during the Algerian crisis, gives France its unusually powerful presidency.", w:"French_Fifth_Republic"}
+  ],
+  pins:[
+    {y:-17000, t:"landmark", n:"Lascaux Cave", d:"Painted caves in the Dordogne, roughly 17,000 years old, with some 600 animals in ochre, charcoal and haematite — horses, aurochs, stags, and one enigmatic scene of a bird-headed man. Closed to the public since 1963 because visitors' breath was destroying the pigment; tourists now see an exact replica.", w:"Lascaux"},
+    {y:1000, t:"landmark", n:"Mont-Saint-Michel", d:"An abbey on a rocky tidal island off Normandy, built up from the 8th century onward. The tide comes in fast across the flats and has drowned pilgrims for a thousand years, which was part of the point.", w:"Mont-Saint-Michel"},
+    {y:1163, t:"landmark", n:"Notre-Dame de Paris", d:"Gothic cathedral on the Île de la Cité, built 1163–1345, among the first buildings to use flying buttresses at scale — which is what allowed the walls to be thin enough for the windows. Severely damaged by fire in 2019 and reopened in 2024.", w:"Notre-Dame_de_Paris"},
+    {y:1682, t:"landmark", n:"Palace of Versailles", d:"Louis XIV moved the entire French court there in 1682, which was the political point: several thousand nobles kept close, occupied with ceremony, and away from their own power bases.", w:"Palace_of_Versailles"},
+    {y:1789, t:"milestone", n:"Rights of Man", d:"The Declaration of the Rights of Man and of the Citizen, August 1789. It asserts that rights are universal and inherent rather than granted by a ruler — a claim that outlived the revolution, the terror and the empire, and underlies most later human-rights language.", w:"Declaration_of_the_Rights_of_Man_and_of_the_Citizen"},
+    {y:1793, t:"landmark", n:"Louvre Museum", d:"A medieval fortress, then a royal palace, then — from 1793, after the Revolution — a public museum, on the principle that the royal collections now belonged to the nation.", w:"Louvre"},
+    {y:1795, t:"milestone", n:"Metric System", d:"Defined during the Revolution, with the metre originally set as one ten-millionth of the distance from the equator to the North Pole. A deliberate attempt to build measurement on nature rather than on the body of a king; now used by every country but three.", w:"Metric_system"},
+    {y:1889, t:"landmark", n:"Eiffel Tower", d:"Built as the entrance arch to the 1889 World's Fair and intended to be dismantled after twenty years. It survived because it made an excellent radio antenna. Three hundred artists petitioned against it while it was going up.", w:"Eiffel_Tower"}
+  ]
+},
+{
+  id:"italy", name:"Italy", flag:"🇮🇹", lon:12.5, lat:42, hue:"#DE6A63",
+  intro:"The centre of the world, then not a country at all for fourteen hundred years, then a country again.",
+  periods:[
+    {y:-1200, a:1, n:"Italic Tribes", d:"Early peoples of the peninsula.", x:"The Etruscans to the north had cities, an alphabet and a language still not fully understood, and ruled Rome itself for a time.", w:"Italic_peoples"},
+    {y:-753, n:"Roman Kingdom", d:"The legendary founding of Rome.", x:"Seven kings, according to a tradition written down centuries later; the archaeology confirms a settlement on the hills but not the story.", w:"Roman_Kingdom"},
+    {y:-509, n:"Roman Republic", d:"The rise of a Mediterranean power.", x:"A constitution of shared magistracies and annual elections, which worked for four centuries and then broke under the strain of the empire it had acquired.", w:"Roman_Republic"},
+    {y:-27, n:"Roman Empire", d:"The peak of classical civilisation.", x:"At its height it governed perhaps a quarter of humanity, with a common currency, legal system and road network from Scotland to the Euphrates.", w:"Roman_Empire"},
+    {y:395, n:"Western Roman Empire", d:"The empire splits in two.", x:"The western half loses its provinces piece by piece and is formally ended in 476 when a Germanic commander simply stops appointing emperors.", w:"Western_Roman_Empire"},
+    {y:493, n:"Ostrogothic Kingdom", d:"Gothic rule in Italy.", x:"Theodoric ruled from Ravenna and kept Roman administration almost intact — for a generation Italy looked much as it had.", w:"Ostrogothic_Kingdom"},
+    {y:553, n:"Byzantine Italy", d:"Reconquest under Justinian.", x:"Twenty years of war to retake Italy for the empire devastated it far more than the Gothic conquest had.", w:"Praetorian_prefecture_of_Italy"},
+    {y:568, n:"Lombard Kingdom", d:"Germanic rule in the north.", x:"The Lombards take the north within a few years of the Byzantine victory, leaving Italy divided between them, the empire and the papacy.", w:"Kingdom_of_the_Lombards"},
+    {y:774, n:"Medieval Italian States", d:"The age of powerful city-states.", x:"Venice, Florence, Genoa and Milan grow rich on trade and banking, and their rivalry produces both constant warfare and the Renaissance.", w:"Italian_city-states"},
+    {y:1130, n:"Kingdom of Sicily", d:"A Mediterranean kingdom of cultures.", x:"Norman kings ruling Arabic-speaking Muslims and Greek-speaking Christians, with a court that issued documents in three languages.", w:"Kingdom_of_Sicily"},
+    {y:1494, n:"The Age of Divided Italy", d:"Foreign powers contest the peninsula.", x:"The French invasion of 1494 opens sixty years of war in which Spain, France and the Habsburgs fight over Italy rather than in their own countries.", w:"Italian_Wars"},
+    {y:1861, n:"Kingdom of Italy", d:"Unification.", x:"Achieved by Piedmontese diplomacy and Garibaldi's volunteers; on unification only a small minority of the population spoke Italian rather than a regional language.", w:"Italian_unification"},
+    {y:1946, n:"Italy", d:"The Italian Republic.", x:"A referendum abolishes the monarchy in 1946, by a narrower margin than is often remembered.", w:"Italy"}
+  ],
+  pins:[
+    {y:-497, t:"landmark", n:"Temple of Saturn", d:"One of the oldest temples of the Roman Forum, and the home of the state treasury — Rome kept its gold reserves under the god of the golden age. The eight columns standing today are from a rebuild after a fire in the 4th century CE.", w:"Temple_of_Saturn"},
+    {y:-500, t:"landmark", n:"Roman Forum", d:"The civic centre of the Republic and Empire: law courts, temples, the senate house, and the platform from which politicians spoke. By the medieval period it had silted up and was used as a cattle pasture.", w:"Roman_Forum"},
+    {y:80, t:"landmark", n:"Colosseum", d:"Rome's great amphitheatre, opened in 80 CE with a hundred days of games. It held perhaps 50,000 people, could be emptied in minutes through eighty numbered entrances, and was later quarried for stone to build Renaissance Rome.", w:"Colosseum"},
+    {y:1173, t:"landmark", n:"Leaning Tower of Pisa", d:"A cathedral bell tower begun in 1173, tilting before the third storey was finished because the subsoil is soft silt. Construction stopped for a century, and the upper floors were then built at a corrected angle, which is why it is slightly banana-shaped.", w:"Leaning_Tower_of_Pisa"},
+    {y:1400, t:"milestone", n:"Renaissance", d:"The rediscovery and reworking of classical learning that begins in the Italian city-states in the 1300s and spreads across Europe. Funded by merchant and banking wealth, argued over in competing republics, and producing linear perspective, anatomy, and the idea that the ancients could be equalled.", w:"Renaissance"}
+  ]
+},
+{
+  id:"germany", name:"Germany", flag:"🇩🇪", lon:10.4, lat:51, hue:"#5E9E77",
+  intro:"Unified for only 74 years before 1945, and again since 1990 — everything before 1871 is a canopy, not a country.",
+  periods:[
+    {y:-800, a:1, n:"Celtic & Germanic Tribes", d:"Most of Germania remained outside Roman rule.", x:"Three Roman legions were destroyed in the Teutoburg Forest in 9 CE, after which the empire settled for the Rhine as its border — arguably the most consequential battle in European history.", w:"Germanic_peoples"},
+    {y:406, n:"Germanic Tribes", d:"Tribal societies beyond the Rhine.", x:"Pressure from the steppe pushes groups west across a frozen Rhine in the winter of 406, and the western empire never recovers the frontier.", w:"Migration_Period"},
+    {y:481, n:"Migration Period", d:"Frankish expansion into Germanic lands.", x:"Frankish power spreads eastward over three centuries, culminating in Charlemagne's brutal thirty-year subjugation of the Saxons.", w:"Migration_Period"},
+    {y:843, n:"East Francia", d:"The birth of Germany.", x:"The eastern third of Charlemagne's divided empire, which develops into a distinct kingdom of German-speaking duchies.", w:"East_Francia"},
+    {y:962, n:"Holy Roman Empire", d:"A thousand years of imperial rule.", x:"An elected emperor presiding over hundreds of effectively self-governing principalities, cities and bishoprics — famously neither holy, nor Roman, nor an empire.", w:"Holy_Roman_Empire"},
+    {y:1701, n:"Kingdom of Prussia", d:"A rising north German power.", x:"A scattered, resource-poor territory that compensated with an army and a bureaucracy, and eventually unified Germany around itself.", w:"Kingdom_of_Prussia"},
+    {y:1815, n:"German Confederation", d:"A loose union of German states.", x:"Napoleon had already abolished the Holy Roman Empire in 1806 and consolidated hundreds of statelets into dozens, which made later unification far easier.", w:"German_Confederation"},
+    {y:1871, n:"German Empire", d:"Unification under Prussia.", x:"Bismarck engineers three short wars in seven years and has the empire proclaimed in the Hall of Mirrors at Versailles, a humiliation France returns in the same room in 1919.", w:"German_Empire"},
+    {y:1919, n:"Weimar Republic", d:"Germany's first republic.", x:"Democratic, culturally extraordinary, and undermined from the start by defeat, reparations, hyperinflation and then depression.", w:"Weimar_Republic"},
+    {y:1933, n:"Nazi Germany", d:"Dictatorship, war and genocide.", x:"Twelve years that killed tens of millions, including the industrialised murder of six million Jews, and ended with Germany destroyed and divided.", w:"Nazi_Germany"},
+    {y:1945, n:"East and West Germany", d:"A divided country.", x:"Two states with two economic systems on either side of the Cold War's central frontier, and a wall through Berlin from 1961.", w:"Divided_Germany"},
+    {y:1990, n:"Germany", d:"Reunification.", x:"Achieved less than a year after the Wall opened, and paid for by a solidarity surcharge that lasted decades.", w:"German_reunification"}
+  ],
+  pins:[
+    {y:1248, t:"landmark", n:"Cologne Cathedral", d:"Begun in 1248, abandoned unfinished in 1473 with a crane left standing on the south tower for four centuries, and completed in 1880 to the original medieval drawings. Briefly the tallest building in the world.", w:"Cologne_Cathedral"},
+    {y:1450, t:"milestone", n:"Printing Press", d:"Gutenberg's movable metal type, in Mainz around 1450. Printing with blocks and even movable type already existed in East Asia; what spread from Mainz was a mechanised system — punch, matrix, mould, oil ink, press — that could produce identical texts in volume. Within fifty years Europe had printed millions of books.", w:"Printing_press"},
+    {y:1791, t:"landmark", n:"Brandenburg Gate", d:"A 1791 city gate in Berlin, modelled on the entrance to the Athenian Acropolis. Stranded in the death strip beside the Wall from 1961 to 1989, which is why it became the image of division and then of reunification.", w:"Brandenburg_Gate"},
+    {y:1886, t:"milestone", n:"Automobile", d:"Karl Benz patents his motor car in 1886. His wife Bertha then drove it 106 km without telling him, fixing it with a hatpin and a garter along the way, to prove it worked — the first long-distance journey by car and an early piece of marketing.", w:"Benz_Patent-Motorwagen"},
+    {y:1905, t:"milestone", n:"Theory of Relativity", d:"Einstein's special theory in 1905 and general theory in 1915. Together they show that space and time are not a fixed stage but part of the physics — that clocks run differently depending on speed and gravity, a correction your phone's satellite navigation applies every day.", w:"Theory_of_relativity"}
+  ]
+},
+{
+  id:"austria", name:"Austria", flag:"🇦🇹", lon:14.5, lat:47.5, hue:"#E8AD48",
+  intro:"A borderland that married its way to the centre of Europe, then was left as a small country when the empire dissolved.",
+  periods:[
+    {y:-800, a:1, n:"Hallstatt Culture", d:"The Iron Age culture of central Europe.", x:"Named after an Austrian salt-mining village whose cemetery was so rich that archaeologists gave its name to an entire European period.", w:"Hallstatt_culture"},
+    {y:-400, a:1, n:"Celtic Kingdom of Noricum", d:"A prosperous Celtic kingdom.", x:"Famous for its iron and steel, which Rome bought in quantity — one reason the eventual annexation was peaceful.", w:"Noricum"},
+    {y:-16, n:"Roman Republic", d:"Noricum absorbed by Rome.", x:"Taken without a war and turned into a frontier province on the Danube.", w:"Noricum"},
+    {y:476, n:"Post-Roman Germanic Kingdoms", d:"After the western empire falls.", x:"The Danube frontier dissolves and the region passes between Ostrogoths, Lombards, Bavarians and Avars.", w:"Migration_Period"},
+    {y:568, n:"Duchy of Bavaria", d:"The Bavarian duchy expands eastward.", x:"Bavarian settlement pushes down the Danube into what will become Austria, and brings Christianity with it.", w:"Duchy_of_Bavaria"},
+    {y:976, n:"Margraviate of Austria", d:"The birth of Austria.", x:"A border march — the name comes from Ostarrîchi, 'eastern realm', first recorded in 996.", w:"Margraviate_of_Austria"},
+    {y:1156, n:"Duchy of Austria", d:"Austria emerges as a regional power.", x:"Raised from march to duchy by a charter granting it unusual autonomy within the empire.", w:"Duchy_of_Austria"},
+    {y:1453, n:"Habsburg Austria", d:"The Habsburgs at the centre of Europe.", x:"They acquired Spain, the Netherlands, Bohemia and Hungary largely by marriage — hence the tag that others make war while Austria marries.", w:"House_of_Habsburg"},
+    {y:1804, n:"Austrian Empire", d:"Empire proclaimed in answer to Napoleon.", x:"Declared in 1804 so that the Habsburgs would still hold an imperial title when Napoleon abolished the Holy Roman Empire two years later.", w:"Austrian_Empire"},
+    {y:1867, n:"Austria-Hungary", d:"The dual monarchy.", x:"Two states, two parliaments, one monarch and a shared army — a compromise with Hungary that left a dozen other nationalities unsatisfied.", w:"Austria-Hungary"},
+    {y:1918, n:"First Austrian Republic", d:"After the empire's collapse.", x:"A small German-speaking rump left over from a multinational empire, unsure it was a viable country at all; annexed by Germany in 1938.", w:"First_Austrian_Republic"},
+    {y:1945, n:"Second Austrian Republic", d:"Restored after the Second World War.", x:"Occupied by four powers until 1955, when it regained full sovereignty in exchange for permanent neutrality.", w:"Austria"}
+  ],
+  pins:[
+    {y:-800, t:"landmark", n:"Hallstatt", d:"An Alpine village where salt has been mined for 7,000 years. The salt preserved not only the miners' tools and clothing but the bodies of miners killed underground, and its Iron Age cemetery of over a thousand graves named the whole central European Iron Age.", w:"Hallstatt"},
+    {y:1359, t:"landmark", n:"St. Stephen's Cathedral", d:"Vienna's Gothic cathedral with its patterned tiled roof of a quarter of a million glazed tiles, largely 14th and 15th century. Its south tower took 65 years to build; the north tower was never finished.", w:"St._Stephen's_Cathedral,_Vienna"},
+    {y:1750, t:"landmark", n:"Schönbrunn Palace", d:"The Habsburgs' summer palace on the edge of Vienna, 1,441 rooms, rebuilt in its present form under Maria Theresa. A six-year-old Mozart performed here in 1762.", w:"Schönbrunn_Palace"},
+    {y:1790, t:"milestone", n:"Classical Music", d:"Vienna, where Haydn, Mozart, Beethoven and Schubert all worked within a few decades and a few streets of each other — the concentration that gives the classical style its name. The city's aristocratic patronage and public concert life made it possible.", w:"Classical_period_(music)"}
+  ]
+},
+{
+  id:"greece", name:"Greece", flag:"🇬🇷", lon:22, lat:39, hue:"#E8AD48",
+  intro:"Greece is Roman, then Byzantine, then Ottoman for far longer than it was ever a land of independent city-states.",
+  periods:[
+    {y:-3000, a:1, n:"Aegean Civilizations", d:"The birth of Greek civilization.", x:"Minoan Crete had palaces, plumbing and a script we still cannot read, and no city walls — which suggests it feared nobody.", w:"Aegean_civilization"},
+    {y:-1600, a:1, n:"Mycenaean Civilization", d:"The first great Greek civilization.", x:"Fortified citadels, chariot warfare and Linear B tablets recording an early form of Greek — the world the Homeric poems remember through five centuries of distortion.", w:"Mycenaean_Greece"},
+    {y:-1100, a:1, n:"Greek Dark Age", d:"Collapse and recovery.", x:"Palaces burn, populations fall and writing is lost entirely for around 300 years; the alphabet that replaces Linear B is borrowed from Phoenician.", w:"Greek_Dark_Ages"},
+    {y:-800, a:1, n:"Classical Greek City-States", d:"Athens, Sparta and the polis.", x:"A few hundred independent states, quarrelling constantly, which between them produced tragedy, philosophy, history-writing and democracy in about two centuries.", w:"Ancient_Greece"},
+    {y:-323, n:"Hellenistic Age", d:"After the death of Alexander.", x:"Greek becomes the common language from Egypt to Afghanistan, and Alexandria's library and museum make it the research centre of the ancient world.", w:"Hellenistic_period"},
+    {y:-146, n:"Roman Republic", d:"Greece under Roman rule.", x:"Rome conquers Greece and is thoroughly colonised by its culture in return — educated Romans learned Greek and sent their sons to Athens.", w:"Roman_Greece"},
+    {y:395, n:"Byzantine Empire", d:"The last Roman empire.", x:"A Greek-speaking Roman state that outlasts the western empire by a thousand years and preserves classical texts that would otherwise be lost.", w:"Byzantine_Empire"},
+    {y:1204, n:"Greek Successor States", d:"Greek states preserved Byzantine traditions.", x:"After crusaders sack Constantinople, Greek rule survives in Nicaea, Epirus and Trebizond, and Nicaea eventually retakes the capital.", w:"Empire_of_Nicaea"},
+    {y:1453, n:"Ottoman Empire", d:"Ottoman rule after the fall of Constantinople.", x:"Nearly four centuries, during which the Orthodox Church became the institution that carried Greek identity.", w:"Ottoman_Greece"},
+    {y:1832, n:"Kingdom of Greece", d:"Independence from the Ottomans.", x:"Won with British, French and Russian intervention, and given a Bavarian prince as its first king.", w:"Kingdom_of_Greece"},
+    {y:1974, n:"Greece", d:"The modern Hellenic Republic.", x:"The current republic dates from the collapse of a seven-year military junta in 1974.", w:"Greece"}
+  ],
+  pins:[
+    {y:-776, t:"milestone", n:"Olympic Games", d:"Traditionally dated to 776 BCE at Olympia, held every four years for over a millennium, with a truce that let athletes travel through wars. Revived in 1896 — the modern games are a deliberate 19th-century reconstruction, not a continuation.", w:"Ancient_Olympic_Games"},
+    {y:-508, t:"milestone", n:"Birth of Democracy", d:"Cleisthenes' reforms in Athens around 508 BCE: direct decision-making by an assembly of citizens, with many offices filled by lottery rather than election. The citizen body excluded women, slaves and foreigners, which was most of the population — but the idea that ordinary people could rule themselves starts here.", w:"Athenian_democracy"},
+    {y:-447, t:"landmark", n:"Parthenon", d:"The temple of Athena on the Acropolis, built 447–432 BCE at the height of Athenian power and paid for out of an alliance fund meant for defence against Persia. Its columns bulge slightly and lean inward — deliberate distortions that make it look straight.", w:"Parthenon"}
+  ]
+},
+{
+  id:"turkey", name:"Turkey", flag:"🇹🇷", lon:35, lat:39, hue:"#7FA9D8",
+  intro:"Hittite, Greek, Roman, Byzantine, then Turkish — the newest layer on the oldest crossroads.",
+  periods:[
+    {y:-1700, a:1, n:"Hittite Empire", d:"One of the great Bronze Age empires.", x:"The Hittites fought Egypt to a draw at Kadesh and then signed the earliest surviving international peace treaty, copies of which exist in both languages.", w:"Hittites"},
+    {y:-1200, a:1, n:"Neo-Hittite Kingdoms", d:"The age of Anatolian kingdoms.", x:"Small successor states that kept Hittite script and iconography going for centuries after the empire itself vanished in the Bronze Age collapse.", w:"Syro-Hittite_states"},
+    {y:-700, a:1, n:"Kingdom of Lydia", d:"Where coinage was invented.", x:"Lydia struck the first standardised metal coins in the 7th century BCE. Its last king, Croesus, was rich enough to become a byword for it, and lost his kingdom to Cyrus of Persia.", w:"Lydia"},
+    {y:-546, n:"Persian Empire", d:"Anatolia under Achaemenid rule.", x:"The revolt of the Greek cities of the Anatolian coast in 499 BCE is what drew Persia into war with mainland Greece.", w:"Achaemenid_Empire"},
+    {y:-334, n:"Macedonian Empire", d:"Alexander's conquest.", x:"Alexander crosses into Asia in 334 BCE and takes the whole Persian empire in a decade.", w:"Macedonian_Empire"},
+    {y:-323, n:"Hellenistic Kingdoms", d:"Successor states of Alexander.", x:"Pergamon builds a library said to rival Alexandria's, and invents parchment when Egypt cuts off the papyrus supply.", w:"Hellenistic_period"},
+    {y:-133, n:"Roman Republic", d:"Rome inherits Pergamon.", x:"The last king of Pergamon left his kingdom to Rome in his will, which is an unusual way to acquire a province.", w:"Asia_(Roman_province)"},
+    {y:395, n:"Byzantine Empire", d:"Constantinople as imperial capital.", x:"Founded by Constantine in 330 on the Bosporus, it was for centuries the largest and richest city in Europe, and survived twenty sieges before finally falling.", w:"Byzantine_Empire"},
+    {y:1077, n:"Sultanate of Rum", d:"Seljuk rule in Anatolia.", x:"Rum means Rome: the Turks named the territory after the Byzantine Romans they had taken it from, following the defeat at Manzikert in 1071.", w:"Sultanate_of_Rum"},
+    {y:1204, n:"Latin Empire", d:"Crusader rule in Constantinople.", x:"The Fourth Crusade, diverted by Venetian debt and dynastic intrigue, sacked the largest Christian city in the world and never reached the Holy Land.", w:"Latin_Empire"},
+    {y:1261, n:"Restored Byzantine Empire", d:"The Byzantines retake the capital.", x:"Recovered almost by accident by a small force that found the walls undefended, but the empire never regains its strength.", w:"Byzantine_Empire"},
+    {y:1299, n:"Ottoman Empire", d:"A multi-continental empire.", x:"From a small frontier principality to an empire spanning three continents, which twice besieged Vienna and lasted 600 years.", w:"Ottoman_Empire"},
+    {y:1923, n:"Turkey", d:"The republic founded.", x:"Atatürk's republic replaced the sultanate and the caliphate, changed the alphabet from Arabic to Latin script, and remade the state on secular lines within a decade.", w:"Turkey"}
+  ],
+  pins:[
+    {y:537, t:"landmark", n:"Hagia Sophia", d:"Justinian's cathedral, completed in 537 in under six years, with a dome so wide and so shallow it seemed to contemporaries to hang from heaven on a golden chain. It held the largest interior space in the world for nearly a thousand years. Church, then mosque after 1453, then museum, then mosque again in 2020.", w:"Hagia_Sophia"},
+    {y:529, t:"milestone", n:"Justinian Code", d:"Roman law compiled and systematised into a single coherent body between 529 and 534. Rediscovered in Italy in the 11th century, it became the basis of legal education across Europe, which is why so much of continental law still resembles it.", w:"Corpus_Juris_Civilis"},
+    {y:1616, t:"landmark", n:"Blue Mosque", d:"The Sultan Ahmed Mosque of 1616, built deliberately facing Hagia Sophia across a square, and named for the 20,000 blue İznik tiles inside. Its six minarets caused a scandal, since only Mecca had six.", w:"Sultan_Ahmed_Mosque"}
+  ]
+}
+];
+
+// Part 3 — Egypt, Iraq, Iran, South Asia, China, Japan
+const REGIONS_3 = [
+{
+  id:"egypt", name:"Egypt", flag:"🇪🇬", lon:30, lat:26, hue:"#7FA9D8",
+  intro:"Three kingdoms separated by three intermediate periods, then two and a half thousand years of rule from somewhere else.",
+  periods:[
+    {y:-3100, a:1, n:"Early Dynastic Period", d:"The unification of Egypt.", x:"Upper and Lower Egypt joined into a single state along the river — one of the earliest territorial states anywhere, and the origin of the double crown.", w:"Early_Dynastic_Period_(Egypt)"},
+    {y:-2686, n:"Old Kingdom", d:"The age of the pyramids.", x:"A centralised state capable of organising tens of thousands of workers for decades at a time; the pyramids are as much an administrative achievement as an architectural one.", w:"Old_Kingdom_of_Egypt"},
+    {y:-2181, n:"First Intermediate Period", d:"Central authority breaks down.", x:"Regional governors take over as royal power fails, possibly amid a long drought that lowered the Nile flood.", w:"First_Intermediate_Period_of_Egypt"},
+    {y:-2055, n:"Middle Kingdom", d:"Reunification; Karnak begun.", x:"Later Egyptians regarded this as their classical age, and its literature was still being copied out by schoolboys a thousand years later.", w:"Middle_Kingdom_of_Egypt"},
+    {y:-1650, n:"Second Intermediate Period", d:"Hyksos rule in the delta.", x:"Rulers of West Asian origin govern the north and introduce the horse and chariot, which Egypt then used to build an empire against them.", w:"Second_Intermediate_Period_of_Egypt"},
+    {y:-1550, n:"New Kingdom", d:"The height of ancient Egypt.", x:"An imperial Egypt reaching into Syria and Nubia — the age of Hatshepsut, Akhenaten, Tutankhamun and Ramesses II.", w:"New_Kingdom_of_Egypt"},
+    {y:-1070, n:"Third Intermediate Period", d:"Division and foreign dynasties.", x:"Power splits between priests at Thebes and kings in the delta, with Libyan and then Nubian dynasties taking the throne.", w:"Third_Intermediate_Period_of_Egypt"},
+    {y:-664, n:"Late Period", d:"The last native dynasties.", x:"Repeatedly conquered by Assyria and Persia and repeatedly recovering, until Alexander arrives in 332 BCE and is welcomed as a liberator.", w:"Late_Period_of_ancient_Egypt"},
+    {y:-305, n:"Ptolemaic Kingdom", d:"Greek rule after Alexander.", x:"A Macedonian dynasty ruling from Alexandria for three centuries; Cleopatra was the first of them to bother learning Egyptian.", w:"Ptolemaic_Kingdom"},
+    {y:-30, n:"Roman & Byzantine Egypt", d:"The empire's granary.", x:"Egypt fed Rome and later Constantinople, and became a centre of early Christianity and of monasticism.", w:"Egypt_(Roman_province)"},
+    {y:641, n:"Arab Caliphate", d:"The Arab conquest of Egypt.", x:"Taken within a few years of the Prophet's death; Arabic gradually replaces Coptic over the following centuries.", w:"Muslim_conquest_of_Egypt"},
+    {y:969, n:"Fatimid Caliphate", d:"A period of cultural and scientific flourishing.", x:"The Fatimids founded Cairo and al-Azhar, which has been teaching continuously ever since.", w:"Fatimid_Caliphate"},
+    {y:1171, n:"Ayyubid Sultanate", d:"Founded by Saladin.", x:"Saladin ends Fatimid rule, unites Egypt and Syria, and retakes Jerusalem in 1187.", w:"Ayyubid_dynasty"},
+    {y:1250, n:"Mamluk Sultanate", d:"A powerful military sultanate.", x:"Slave-soldiers who seized power outright and then, at Ain Jalut in 1260, inflicted the first serious defeat on the Mongols.", w:"Mamluk_Sultanate"},
+    {y:1517, n:"Ottoman Empire", d:"Egypt as an Ottoman province.", x:"Ruled from Istanbul, but with Mamluk households continuing to hold much of the real local power.", w:"Egypt_Eyalet"},
+    {y:1805, n:"Muhammad Ali Dynasty", d:"Modernisation under a new dynasty.", x:"An Albanian commander seizes power and builds an army, a navy and a cotton economy strong enough to threaten the Ottomans themselves.", w:"Muhammad_Ali_dynasty"},
+    {y:1882, n:"Colonial Egypt", d:"British occupation.", x:"Britain occupies to secure debt repayments and the Suez Canal, and stays for seventy years.", w:"History_of_Egypt_under_the_British"},
+    {y:1922, n:"Kingdom of Egypt", d:"Nominal independence.", x:"Independent on paper, with British troops still in the country and control of the canal retained.", w:"Kingdom_of_Egypt"},
+    {y:1953, n:"Egypt", d:"The republic declared.", x:"Officers overthrow the monarchy in 1952; Nasser nationalises the Suez Canal in 1956 and survives the invasion that follows.", w:"History_of_Egypt"}
+  ],
+  pins:[
+    {y:-2560, t:"landmark", n:"Great Pyramid of Giza", d:"Khufu's tomb, around 2560 BCE: 2.3 million blocks, sides aligned to true north within a twentieth of a degree, and the tallest structure on earth for the next 3,800 years. Built by paid, organised labour rather than slaves, housed in a purpose-built town nearby.", w:"Great_Pyramid_of_Giza"},
+    {y:-2000, t:"landmark", n:"Karnak", d:"A vast temple complex at Thebes, added to by pharaoh after pharaoh across some 2,000 years — less a building than an accumulation. Its hypostyle hall holds 134 columns, the largest of them twenty metres tall.", w:"Karnak"},
+    {y:-2560, t:"milestone", n:"Pyramids", d:"The poster counts the pyramids as a milestone of civilisation for the organisation behind them: quarrying, transport, food supply, rotating labour gangs and record-keeping, sustained across generations. It is the earliest evidence of a state able to plan on that scale.", w:"Egyptian_pyramids"},
+    {y:-1264, t:"landmark", n:"Abu Simbel", d:"Ramesses II's rock-cut temples with four colossal seated figures of himself, 13th century BCE. In the 1960s the whole cliff face was cut into a thousand blocks and reassembled sixty metres higher to escape the reservoir rising behind the Aswan Dam.", w:"Abu_Simbel"}
+  ]
+},
+{
+  id:"iraq", name:"Iraq", flag:"🇮🇶", lon:44, lat:33, hue:"#5E9E77",
+  intro:"Invents cities and writing, then spends two millennia being ruled by people who learned from it.",
+  periods:[
+    {y:-4500, a:1, n:"Sumerian Civilization", d:"The birthplace of cities and writing.", x:"Uruk may have been the first city anywhere. Writing begins here as accounting — the earliest tablets are receipts for barley and beer.", w:"Sumer"},
+    {y:-2334, n:"Akkadian Empire", d:"The first great Mesopotamian empire.", x:"Sargon of Akkad conquers the Sumerian cities and rules them as one state, which is roughly what 'empire' has meant ever since.", w:"Akkadian_Empire"},
+    {y:-2112, n:"Sumerian Renaissance", d:"The Third Dynasty of Ur.", x:"A bureaucratic revival that left tens of thousands of administrative tablets, and built the Ziggurat of Ur.", w:"Third_Dynasty_of_Ur"},
+    {y:-1894, n:"Old Babylonian Kingdom", d:"Hammurabi's Babylon.", x:"Hammurabi unites southern Mesopotamia and issues the law code carved on a stone pillar for public display.", w:"First_Babylonian_dynasty"},
+    {y:-1595, n:"Kassite Babylon", d:"Long Kassite rule in Babylonia.", x:"Four centuries of stability under a foreign dynasty that adopted Babylonian language, gods and customs entirely.", w:"Kassites"},
+    {y:-1365, n:"Assyrian Empire", d:"A powerful military empire.", x:"The first empire to systematically deport conquered populations, and the builder of great libraries — Ashurbanipal's at Nineveh preserved the Epic of Gilgamesh.", w:"Assyria"},
+    {y:-626, n:"Neo-Babylonian Empire", d:"Nebuchadnezzar's Babylon.", x:"Short but spectacular: the Ishtar Gate, the deportation of the Judeans, and astronomical records precise enough that modern astronomers still use them.", w:"Neo-Babylonian_Empire"},
+    {y:-539, n:"Persian Empire", d:"Cyrus takes Babylon.", x:"The city surrenders without a fight, and Cyrus lets the deported peoples go home — a policy recorded on a clay cylinder now in the British Museum.", w:"Achaemenid_Empire"},
+    {y:-312, n:"Seleucid Empire", d:"Greek rule in Mesopotamia.", x:"Seleucus founds a new capital on the Tigris and shifts the centre of gravity away from Babylon, which slowly empties.", w:"Seleucid_Empire"},
+    {y:-141, n:"Parthian Empire", d:"A rival of Rome in the east.", x:"Parthia destroyed a Roman army at Carrhae in 53 BCE and fought Rome to a standstill for nearly three centuries.", w:"Parthian_Empire"},
+    {y:224, n:"Sasanian Empire", d:"The last great Persian empire.", x:"Ctesiphon on the Tigris becomes the imperial capital and one of the largest cities in the world.", w:"Sasanian_Empire"},
+    {y:633, n:"Arab Caliphate", d:"A vast empire connecting three continents.", x:"Within twenty years the Arab armies take the entire Sasanian empire and half of the Byzantine one.", w:"Rashidun_Caliphate"},
+    {y:750, n:"Abbasid Caliphate", d:"A cosmopolitan empire centred on Baghdad.", x:"Baghdad, founded in 762 as a planned round city, becomes the intellectual centre of the world — Greek, Persian and Indian learning translated into Arabic and pushed forward.", w:"Abbasid_Caliphate"},
+    {y:1258, n:"Post-Abbasid Regional Dynasties", d:"Mongol influence and emerging regional powers.", x:"The Mongols sack Baghdad in 1258, killing the caliph and, by tradition, destroying the libraries; Mesopotamia never regains its centrality.", w:"Siege_of_Baghdad_(1258)"},
+    {y:1534, n:"Ottoman Empire", d:"Ottoman Mesopotamia.", x:"A contested frontier between the Ottomans and Safavid Iran, fought over repeatedly for two centuries.", w:"Ottoman_Iraq"},
+    {y:1921, n:"Kingdom of Iraq", d:"A monarchy under British mandate.", x:"Borders drawn by Britain and France after the First World War, and a king imported from the Hejaz.", w:"Mandatory_Iraq"},
+    {y:1958, n:"Iraq", d:"The republic declared.", x:"The monarchy is overthrown in 1958, beginning decades of coups, war and, from 2003, invasion and its aftermath.", w:"History_of_Iraq"}
+  ],
+  pins:[
+    {y:-3200, t:"milestone", n:"Invention of Writing", d:"Cuneiform begins in Uruk around 3200 BCE as pictographic accounting marks pressed into clay, and becomes a full writing system able to record law, poetry and astronomy. It is the first time human speech is made durable, and the reason history begins here.", w:"Cuneiform"},
+    {y:-2100, t:"landmark", n:"Ziggurat of Ur", d:"A stepped temple platform of mud brick faced with fired brick, built around 2100 BCE for the moon god Nanna. Not a tomb, unlike a pyramid — a raised base for a shrine, with a triple staircase up the front.", w:"Ziggurat_of_Ur"},
+    {y:-1750, t:"milestone", n:"Code of Hammurabi", d:"Not the first law code, but the most complete surviving one: 282 rulings carved on a two-metre stone pillar and set up in public, covering wages, surgery, divorce, building standards and theft. Penalties depend explicitly on the class of both parties.", w:"Code_of_Hammurabi"}
+  ]
+},
+{
+  id:"iran", name:"Iran", flag:"🇮🇷", lon:53, lat:32, hue:"#DE6A63",
+  intro:"Three Persian empires — Achaemenid, Sasanian, Safavid — each a deliberate revival of the last.",
+  periods:[
+    {y:-2700, a:1, n:"Elamite Civilization", d:"One of the earliest civilizations of Iran.", x:"Centred on Susa, contemporary with Sumer, trading and fighting with Mesopotamia for two thousand years, with its own undeciphered early script.", w:"Elam"},
+    {y:-1500, a:1, n:"Iranian Tribes", d:"The arrival of Iranian peoples.", x:"Indo-Iranian speakers move onto the plateau, bringing the language family and the religious tradition that becomes Zoroastrianism.", w:"Iranian_peoples"},
+    {y:-678, n:"Median Empire", d:"The first Iranian empire.", x:"The Medes join with Babylon to destroy Assyria in 612 BCE, then are absorbed by their own Persian vassals.", w:"Median_kingdom"},
+    {y:-550, n:"Achaemenid Persian Empire", d:"The largest empire the world had yet seen.", x:"Cyrus and his successors rule from the Aegean to the Indus with a road system, a postal service and a policy of local tolerance, until Alexander.", w:"Achaemenid_Empire"},
+    {y:-330, n:"Macedonian Empire", d:"Alexander defeats Darius III.", x:"Persepolis is burned, whether by accident, drunken impulse or deliberate revenge for Athens — the sources disagree.", w:"Macedonian_Empire"},
+    {y:-312, n:"Seleucid Empire", d:"Greek successor rule.", x:"Greek cities and Greek administration spread across the plateau, but hold it for less than a century before Iranian rule returns.", w:"Seleucid_Empire"},
+    {y:-247, n:"Parthian Empire", d:"Arsacid rule in Iran.", x:"A decentralised empire of great noble houses, famous for horse archers and the feigned retreat that gave us the parting shot.", w:"Parthian_Empire"},
+    {y:224, n:"Sasanian Empire", d:"The last great Persian empire.", x:"Rome's only true peer for four centuries, with Zoroastrianism as a state religion — and exhausted by a final war with Byzantium just before the Arab conquest.", w:"Sasanian_Empire"},
+    {y:651, n:"Arab Caliphate", d:"The Muslim conquest of Persia.", x:"Iran becomes Muslim but not Arab: Persian language and administration survive and shape the caliphate from within.", w:"Muslim_conquest_of_Persia"},
+    {y:821, n:"Regional Kingdoms", d:"An era of regional states and cultural diversity.", x:"Persian-language literature revives under local dynasties, and Iranian scholars do much of the work now remembered as the Islamic golden age.", w:"Iranian_Intermezzo"},
+    {y:1501, n:"Safavid Empire", d:"Shi'a Iran.", x:"The Safavids convert the country to Twelver Shi'ism by force within a few generations — the single most consequential fact about the modern Middle East.", w:"Safavid_Iran"},
+    {y:1736, n:"Afsharid Empire", d:"Nader Shah's conquests.", x:"A brilliant and violent commander who sacked Delhi in 1739 and took the Peacock Throne and the Koh-i-Noor with him.", w:"Afsharid_Iran"},
+    {y:1789, n:"Qajar Dynasty", d:"Iran meets the modern great powers.", x:"Territory lost to Russia, concessions sold to Britain, and a constitutional revolution in 1906 that produced Iran's first parliament.", w:"Qajar_Iran"},
+    {y:1925, n:"Pahlavi Dynasty", d:"Rapid modernisation under the shahs.", x:"State-led industrialisation and secularisation, oil nationalisation, a British and American coup against the elected prime minister in 1953, and growing repression.", w:"Pahlavi_dynasty"},
+    {y:1979, n:"Iran", d:"The Islamic Republic.", x:"A revolution with many participants that ended under clerical rule, followed immediately by eight years of war with Iraq.", w:"Iranian_Revolution"}
+  ],
+  pins:[
+    {y:-1250, t:"landmark", n:"Chogha Zanbil", d:"An Elamite ziggurat from around 1250 BCE, built in five diminishing levels and never finished. Buried under its own collapse for three thousand years, which is why it is the best-preserved ziggurat anywhere.", w:"Chogha_Zanbil"},
+    {y:-518, t:"landmark", n:"Persepolis", d:"The Achaemenid ceremonial capital begun by Darius I around 518 BCE. Its staircase reliefs show delegations from twenty-three subject peoples bringing tribute, each in their own dress — an empire's self-portrait. Alexander burned it in 330 BCE.", w:"Persepolis"},
+    {y:1602, t:"landmark", n:"Naqsh-e Jahan Square", d:"Shah Abbas's enormous square in Isfahan, laid out around 1600, with a mosque at one end, a palace on one side and the bazaar at the other. Polo was played in it; the stone goalposts are still there.", w:"Naqsh-e_Jahan_Square"}
+  ]
+},
+{
+  id:"india", name:"India & Pakistan", flag:"🇮🇳", lon:78, lat:22, hue:"#7FA9D8",
+  intro:"Two long imperial moments — Maurya and Mughal — with regional kingdoms filling most of the space between.",
+  periods:[
+    {y:-3300, a:1, n:"Indus Valley Civilization", d:"One of the world's earliest urban civilizations.", x:"Gridded cities, standardised brick sizes across hundreds of miles, sophisticated drainage — and no identifiable palace, temple or royal tomb, which is genuinely strange.", w:"Indus_Valley_Civilisation"},
+    {y:-1500, a:1, n:"Vedic Period", d:"An era of early Vedic culture.", x:"Known almost entirely from the Vedas, transmitted orally with extraordinary precision for centuries before being written down.", w:"Vedic_period"},
+    {y:-600, a:1, n:"Mahajanapadas", d:"The sixteen great kingdoms.", x:"Kingdoms and republics whose rivalry forms the political background to the Buddha and Mahavira, both of whom were born into this world.", w:"Mahajanapadas"},
+    {y:-322, n:"Maurya Empire", d:"India's first great empire.", x:"Under Ashoka it covered nearly the whole subcontinent; after a bloody conquest of Kalinga he converted to Buddhism and had edicts of tolerance carved on pillars across the empire.", w:"Maurya_Empire"},
+    {y:-185, n:"Post-Mauryan Kingdoms", d:"An age of regional kingdoms.", x:"Indo-Greek, Kushan and Satavahana states, with Buddhism spreading north along the trade routes into Central Asia and China.", w:"Middle_kingdoms_of_India"},
+    {y:320, n:"Gupta Empire", d:"A classical golden age.", x:"Mathematics, astronomy, Sanskrit literature and temple architecture; Aryabhata calculates the length of the year to within minutes.", w:"Gupta_Empire"},
+    {y:550, n:"Post-Gupta Kingdoms", d:"Fragmentation after the Guptas.", x:"Regional powers in the Deccan and the south — the Pallavas, Chalukyas and later Cholas — build maritime trade across the Bay of Bengal.", w:"Middle_kingdoms_of_India"},
+    {y:606, n:"Harsha's Empire", d:"A brief northern reunification.", x:"Forty years of unity in the north under a single ruler, then fragmentation again on his death.", w:"Harsha"},
+    {y:647, n:"Regional Kingdoms", d:"An era of regional states and cultural diversity.", x:"Five and a half centuries in one block: Cholas, Rashtrakutas, Palas and dozens more, plus the Chola naval expeditions into Southeast Asia.", w:"Middle_kingdoms_of_India"},
+    {y:1206, n:"Delhi Sultanate", d:"A Delhi-based imperial system in northern India.", x:"Five successive dynasties, Persianate court culture, and the force that absorbed the Mongol invasions the rest of Asia could not.", w:"Delhi_Sultanate"},
+    {y:1526, n:"Mughal Empire", d:"Empire builders of the Taj Mahal.", x:"Founded by Babur, consolidated by Akbar's policy of religious accommodation, and at its height governing perhaps a quarter of the world's economy.", w:"Mughal_Empire"},
+    {y:1858, n:"Colonial India", d:"Direct British rule.", x:"The Company is replaced by the Crown after the rebellion of 1857; railways, famines, and a national movement all follow.", w:"British_Raj"},
+    {y:1947, n:"India & Pakistan", d:"Independence and partition.", x:"Partition displaced perhaps fifteen million people and killed somewhere between several hundred thousand and two million.", w:"Partition_of_India"}
+  ],
+  pins:[
+    {y:-2500, t:"landmark", n:"Mohenjo-daro", d:"An Indus city of around 2500 BCE with streets on a grid, brick drains along them, a covered sewer system and a great public bath. No palace and no temple has been identified, and its script — found on thousands of small seals — has never been deciphered.", w:"Mohenjo-daro"},
+    {y:-1000, t:"milestone", n:"Yoga", d:"Traced to Vedic and later Sanskrit texts, systematised in Patanjali's Yoga Sutras around the early centuries CE as a discipline of mind rather than a set of postures. The posture-centred form familiar today was assembled much later, partly in the 20th century.", w:"Yoga"},
+    {y:-500, t:"milestone", n:"Birth of Buddhism", d:"The Buddha teaches in the Ganges plain around the 5th century BCE. Spread by Ashoka's missions and then along the Silk Road, it becomes the dominant religion of much of East and Southeast Asia while largely disappearing from India itself.", w:"Buddhism"},
+    {y:628, t:"milestone", n:"The Concept of Zero", d:"Indian mathematicians treat zero as a number you can calculate with, not merely a gap in a column — Brahmagupta sets out rules for arithmetic with it and with negative numbers in 628 CE. Transmitted through Arabic mathematics to Europe, it underlies essentially all later computation.", w:"0"},
+    {y:1199, t:"landmark", n:"Qutub Minar", d:"A 73-metre victory tower in Delhi, begun in 1199 at the founding of the Sultanate and built in stages by four rulers, which is why the stone and the style change as it rises.", w:"Qutb_Minar"},
+    {y:1632, t:"landmark", n:"Taj Mahal", d:"Shah Jahan's tomb for his wife Mumtaz Mahal, built 1632–1653 in white marble inlaid with semi-precious stone. Perfectly symmetrical except for one thing: Shah Jahan's own cenotaph, added later beside hers, off-centre.", w:"Taj_Mahal"}
+  ]
+},
+{
+  id:"china", name:"China", flag:"🇨🇳", lon:105, lat:35, hue:"#E8AD48",
+  intro:"Division is always followed by reunification — the one thing this column never does is stay broken.",
+  periods:[
+    {y:-3300, a:1, n:"Liangzhu Culture", d:"An early state-level civilization.", x:"A Neolithic culture in the Yangtze delta with jade workshops, city walls and a huge water-management system, only recognised as a state-level society in recent decades.", w:"Liangzhu_culture"},
+    {y:-2070, a:1, n:"Xia Dynasty", d:"China's semi-legendary first dynasty.", x:"Recorded in later histories; archaeologists argue about which Bronze Age sites, if any, correspond to it.", w:"Xia_dynasty"},
+    {y:-1600, a:1, n:"Shang Dynasty", d:"Bronze casting and oracle bones.", x:"The oracle bones — questions to the ancestors scratched on ox scapulae and turtle shells — carry the direct ancestor of the characters still in use today.", w:"Shang_dynasty"},
+    {y:-1046, n:"Zhou Dynasty", d:"The age of classical Chinese thought.", x:"The longest dynasty in Chinese history, and in its chaotic later centuries the setting for Confucius, Laozi, Mozi and the rest of the hundred schools.", w:"Zhou_dynasty"},
+    {y:-221, n:"Qin Dynasty", d:"Unification.", x:"Fifteen years, one emperor, and a standardisation of script, weights, measures and axle widths that made a single Chinese state governable at all.", w:"Qin_dynasty"},
+    {y:-202, n:"Han Dynasty", d:"The foundation of imperial China.", x:"Four centuries that set the template every later dynasty copied — an examined civil service, Confucian statecraft, and the Silk Road trade with Rome.", w:"Han_dynasty"},
+    {y:220, n:"Age of Division", d:"Centuries of political fragmentation.", x:"Nearly 370 years of competing states and northern conquest dynasties, during which Buddhism spreads through China.", w:"Six_Dynasties"},
+    {y:589, n:"Sui Dynasty", d:"Reunification and the Grand Canal.", x:"Short and ruinously ambitious: the canal linking north and south is still in use, but the labour and the failed wars destroyed the dynasty in under forty years.", w:"Sui_dynasty"},
+    {y:618, n:"Tang Dynasty", d:"A golden age of Chinese civilization.", x:"Chang'an was probably the largest city in the world, cosmopolitan enough to hold Nestorian churches, Zoroastrian temples and mosques.", w:"Tang_dynasty"},
+    {y:907, n:"Five Dynasties Period", d:"A short age of division.", x:"Fifty-three years, five dynasties in the north and ten kingdoms in the south, before reunification.", w:"Five_Dynasties_and_Ten_Kingdoms_period"},
+    {y:960, n:"Song Dynasty", d:"An era of innovation and commerce.", x:"Paper money, gunpowder weapons, the magnetic compass, movable type, and an economy so commercialised that historians argue about why it did not industrialise.", w:"Song_dynasty"},
+    {y:1271, n:"Yuan Dynasty", d:"Mongol rule over China.", x:"China as part of the largest contiguous land empire in history, with overland trade safe enough for Marco Polo's journey.", w:"Yuan_dynasty"},
+    {y:1368, n:"Ming Dynasty", d:"The Forbidden City and the treasure fleets.", x:"Zheng He's fleets reached East Africa in the early 1400s with ships several times the size of anything in Europe — and then the voyages were stopped and the records destroyed.", w:"Ming_dynasty"},
+    {y:1644, n:"Qing Dynasty", d:"A multi-ethnic empire.", x:"Manchu rulers governing a vast territory including Tibet, Xinjiang and Mongolia, and presiding over both a population boom and, from 1839, a century of foreign humiliation.", w:"Qing_dynasty"},
+    {y:1912, n:"Republic of China", d:"The end of imperial rule.", x:"Two thousand years of empire end in a few months; what follows is warlordism, civil war and Japanese invasion.", w:"Republic_of_China_(1912–1949)"},
+    {y:1949, n:"China", d:"The People's Republic.", x:"Founded in 1949, and since 1978 the fastest large-scale economic transformation in recorded history.", w:"History_of_the_People's_Republic_of_China"}
+  ],
+  pins:[
+    {y:-220, t:"landmark", n:"Great Wall of China", d:"Not one wall but many, built and rebuilt over two millennia by different dynasties along different lines. The stone-and-brick wall in every photograph is mostly Ming, from after 1368. It is not visible from space with the naked eye.", w:"Great_Wall_of_China"},
+    {y:-210, t:"landmark", n:"Terracotta Army", d:"Around 8,000 individually modelled soldiers, plus horses and chariots, buried in pits guarding the tomb of the first Qin emperor near Xi'an. Discovered by farmers digging a well in 1974. The tomb mound itself has never been opened.", w:"Terracotta_Army"},
+    {y:105, t:"milestone", n:"Papermaking", d:"Credited to the Han court official Cai Lun around 105 CE — bark, rag and hemp pulped and pressed into sheets. Cheap writing material spread the examination system and mass literacy in China, and reached the Islamic world after 751 and Europe centuries later.", w:"Paper"},
+    {y:1088, t:"milestone", n:"Compass", d:"Magnetic direction-finding is described in China from the 11th century and used for navigation by the Song. It made open-sea sailing out of sight of land routinely survivable, which is a precondition for every later voyage of exploration.", w:"Compass"},
+    {y:1420, t:"landmark", n:"Forbidden City", d:"The Ming imperial palace in Beijing, completed in 1420: 980 buildings inside a moat and a wall, closed to anyone without the emperor's permission for nearly 500 years, and home to twenty-four emperors.", w:"Forbidden_City"}
+  ]
+},
+{
+  id:"japan", name:"Japan", flag:"🇯🇵", lon:138, lat:36, hue:"#5E9E77",
+  intro:"Named first for capitals, then for shogun families, then for an emperor.",
+  periods:[
+    {y:-10000, a:1, n:"Jōmon Period", d:"Japan's earliest known culture.", x:"Named for its cord-marked pottery, among the oldest anywhere — made by hunter-gatherers settled enough to be sedentary without farming.", w:"Jōmon_period"},
+    {y:-300, a:1, n:"Yayoi Period", d:"Agriculture and metalworking arrive.", x:"Wet rice cultivation, bronze and iron come from the Asian mainland, and the population and social hierarchy both grow quickly.", w:"Yayoi_period"},
+    {y:250, n:"Yamato State", d:"The rise of the first Japanese state.", x:"A confederation of clans in the Kinai region whose ruling line becomes the imperial house — the longest continuous hereditary monarchy in the world.", w:"Yamato_period"},
+    {y:710, n:"Nara Period", d:"The first permanent capital.", x:"A capital laid out on the Chinese model, a Chinese-style law code, and state Buddhism on a monumental scale.", w:"Nara_period"},
+    {y:794, n:"Heian Period", d:"The golden age of classical Japanese culture.", x:"Four centuries of court aesthetics in Kyoto that produced The Tale of Genji, often called the first novel, written by a court woman around 1010.", w:"Heian_period"},
+    {y:1185, n:"Kamakura Shogunate", d:"The first shogunate.", x:"Military government under a shogun while the emperor continues to reign in Kyoto — an arrangement that lasts nearly seven centuries. Twice repels Mongol invasions, with help from typhoons.", w:"Kamakura_shogunate"},
+    {y:1336, n:"Muromachi Shogunate", d:"Samurai government and civil conflict.", x:"Weak central control but extraordinary culture: the tea ceremony, noh theatre, ink painting and dry gardens all take their classic form here.", w:"Ashikaga_shogunate"},
+    {y:1467, n:"Sengoku Period", d:"The warring states.", x:"A century of near-continuous civil war between regional lords, into which Portuguese traders introduce firearms in 1543, changing it fast.", w:"Sengoku_period"},
+    {y:1603, n:"Tokugawa Shogunate", d:"An era of peace and isolation.", x:"Two and a half centuries of internal peace, with foreign contact restricted to a single Dutch trading post — and, by the end, one of the most literate and urbanised societies on earth.", w:"Tokugawa_shogunate"},
+    {y:1868, n:"Meiji Era", d:"Rapid modernisation.", x:"The shogunate falls, the samurai class is abolished by its own members, and Japan industrialises fast enough to defeat Russia within forty years.", w:"Meiji_era"},
+    {y:1912, n:"Empire of Japan", d:"Imperial expansion.", x:"Colonial rule in Korea and Taiwan, invasion of China, and total defeat in 1945.", w:"Empire_of_Japan"},
+    {y:1947, n:"Japan", d:"The postwar constitution.", x:"A constitution renouncing war, and three decades of growth that made a devastated country the world's second-largest economy.", w:"Japan"}
+  ],
+  pins:[
+    {y:1397, t:"landmark", n:"Kinkaku-ji", d:"The Golden Pavilion in Kyoto, a shogun's retirement villa turned Zen temple in 1397, with its top two storeys covered in gold leaf. The present building is a 1955 reconstruction after a novice monk burned it down.", w:"Kinkaku-ji"},
+    {y:1609, t:"landmark", n:"Himeji Castle", d:"A white hilltop castle completed in 1609, with a spiral approach of gates and dead ends designed to confuse and expose attackers. Never besieged, never burned, and the best-preserved castle in Japan.", w:"Himeji_Castle"},
+    {y:1964, t:"milestone", n:"Bullet Train", d:"The Tokaido Shinkansen opened nine days before the 1964 Tokyo Olympics, running at 210 km/h on dedicated track. It has carried billions of passengers with no fatality from a derailment or collision.", w:"Shinkansen"},
+    {y:1970, t:"milestone", n:"Lean Manufacturing", d:"The Toyota Production System: build only what is needed, stop the line when a defect appears, and treat inventory as waste. Studied and copied worldwide from the 1980s, it reorganised factory work and then spread far beyond factories.", w:"Lean_manufacturing"}
+  ]
+}
+];
+
+// Part 4 — global events, shown in a lane beneath every region
+const WORLD = [
+  {y:-9500, n:"Farming begins", d:"Wheat, barley, sheep and goats are domesticated in the Fertile Crescent, and rice, maize, potatoes and millet independently elsewhere over the following millennia. Everything on this chart — cities, states, writing, kings — depends on the surplus that farming makes possible, and it also brought worse nutrition, new diseases and inequality.", w:"Neolithic_Revolution"},
+  {y:-3200, n:"Writing", d:"Cuneiform in Mesopotamia and hieroglyphs in Egypt within a few centuries of each other, followed by independent inventions in China and Mesoamerica. The dividing line between prehistory and history is simply whether anyone wrote it down.", w:"History_of_writing"},
+  {y:-1177, n:"Bronze Age Collapse", d:"Within about fifty years around 1200 BCE, the Hittite empire, Mycenaean Greece, and the trading system linking them all disappear. Cities burn from Greece to the Levant, Egypt barely survives, and literacy is lost in several places for centuries. The cause is still argued: drought, migration, earthquake, systems failure, or all of them.", w:"Late_Bronze_Age_collapse"},
+  {y:-500, n:"The Axial Age", d:"Within a few centuries, and mostly without contact, the Buddha and Mahavira in India, Confucius and Laozi in China, the Hebrew prophets, and Greek philosophy from Thales to Socrates. Whatever the explanation, most of the world's enduring frameworks for thinking about how to live date from this window.", w:"Axial_Age"},
+  {y:-130, n:"The Silk Road opens", d:"Han envoys reach Central Asia and regular overland trade links China, India, Persia and eventually Rome. Silk goes west, glass and horses go east, and Buddhism, papermaking and eventually plague travel with the caravans.", w:"Silk_Road"},
+  {y:30, n:"Rise of Christianity", d:"A small Jewish movement in Roman Judaea spreads through the cities of the empire, is legalised in 313, and becomes the state religion by the end of the 4th century. It carries Roman institutional forms into medieval Europe long after the western empire is gone.", w:"Early_Christianity"},
+  {y:476, n:"Fall of the Western Roman Empire", d:"The last western emperor is deposed in 476, though the process took a century and the eastern empire continued for another thousand years. Trade, cities, literacy and long-distance administration in western Europe all contract sharply.", w:"Fall_of_the_Western_Roman_Empire"},
+  {y:622, n:"Rise of Islam", d:"Muhammad's community moves to Medina in 622, the year Islamic dating begins. Within a century Arab armies rule from Spain to the Indus, having taken the entire Sasanian empire and half the Byzantine one — one of the fastest political transformations in history.", w:"Spread_of_Islam"},
+  {y:793, n:"The Viking Age", d:"Scandinavian raiders, traders and settlers reach Britain, Ireland, France, Russia, Iceland, Greenland and, briefly, Newfoundland around 1000 — the first European contact with the Americas, abandoned within a few years.", w:"Viking_Age"},
+  {y:1206, n:"The Mongol Empire", d:"Genghis Khan unites the steppe tribes and his successors build the largest contiguous land empire in history, from Korea to Hungary. Catastrophic in conquest — Baghdad in 1258 — and then, for a century, the guarantor of safe overland travel across Eurasia.", w:"Mongol_Empire"},
+  {y:1347, n:"The Black Death", d:"Plague arrives in Europe in 1347 and kills perhaps a third to half the population within five years, with comparable losses in parts of the Islamic world. Labour scarcity that followed raised wages, weakened serfdom, and reshaped European society for a century.", w:"Black_Death"},
+  {y:1453, n:"Fall of Constantinople", d:"Ottoman cannon breach the walls that had held for a thousand years. The last remnant of the Roman empire ends, Greek scholars and manuscripts move west into Italy, and European traders start looking for a sea route east.", w:"Fall_of_Constantinople"},
+  {y:1492, n:"The Columbian Exchange", d:"After 1492 two hemispheres separated for 12,000 years are permanently reconnected. Maize, potatoes and tomatoes transform diets across Eurasia and Africa; horses and wheat transform the Americas; and Old World diseases kill an estimated 80–95% of the Indigenous population of the Americas within a century and a half.", w:"Columbian_exchange"},
+  {y:1517, n:"The Reformation", d:"Luther's challenge to Rome splits western Christianity permanently, aided by the printing press that made it impossible to contain. The wars that follow, especially the Thirty Years' War, kill a large share of central Europe's population.", w:"Reformation"},
+  {y:1526, n:"The Transatlantic Slave Trade", d:"Over roughly three and a half centuries, some 12.5 million people were shipped from West and Central Africa to the Americas; around 10.7 million survived the crossing. It supplied the labour for the sugar, tobacco and cotton economies, and its consequences shape three continents.", w:"Atlantic_slave_trade"},
+  {y:1543, n:"The Scientific Revolution", d:"Copernicus and Vesalius both publish in 1543; Galileo, Kepler, Harvey and Newton follow. The change is less any single discovery than the method — systematic observation, mathematics and published, checkable results.", w:"Scientific_Revolution"},
+  {y:1760, n:"The Industrial Revolution", d:"Coal, steam and factory organisation in Britain break the ceiling that had held human productivity roughly flat for millennia. Within two centuries it raises living standards enormously, moves most people into cities, and begins the rise in atmospheric carbon dioxide.", w:"Industrial_Revolution"},
+  {y:1796, n:"Vaccination", d:"Jenner demonstrates inoculation with cowpox in 1796. Combined with germ theory in the 19th century and antibiotics in the 20th, it is the single largest cause of the collapse in child mortality — smallpox, which killed hundreds of millions, was declared eradicated in 1980.", w:"Vaccination"},
+  {y:1914, n:"The First World War", d:"Four years, some 20 million dead, four empires destroyed — Russian, German, Austro-Hungarian and Ottoman. The borders drawn afterwards in Europe and the Middle East are still being argued over.", w:"World_War_I"},
+  {y:1918, n:"The 1918 influenza pandemic", d:"Infected perhaps a third of the world and killed somewhere between 25 and 50 million people in about two years, more than the war it followed. Unusually, it killed healthy young adults at high rates.", w:"Spanish_flu"},
+  {y:1939, n:"The Second World War", d:"The deadliest conflict in history: 70–85 million dead, most of them civilians, including the systematic murder of six million Jews. It ends with nuclear weapons, and with the United Nations and the institutions of the postwar order.", w:"World_War_II"},
+  {y:1945, n:"The Nuclear Age", d:"Hiroshima and Nagasaki in August 1945. For the first time a species has the ability to destroy itself deliberately, and the deterrence logic that follows shapes every great-power relationship since.", w:"Nuclear_weapon"},
+  {y:1947, n:"Decolonisation", d:"Beginning with India and Pakistan in 1947 and running through the 1960s in Africa, dozens of new states emerge and the number of independent countries roughly triples. It is why so many of this chart's columns end where they do.", w:"Decolonization"},
+  {y:1953, n:"The structure of DNA", d:"Franklin's X-ray images and Watson and Crick's model in 1953 reveal how heredity is physically encoded and copied. Genome sequencing, genetic medicine and modern biology all follow from it.", w:"Nucleic_acid_double_helix"},
+  {y:1960, n:"The Green Revolution", d:"High-yield wheat and rice varieties, fertiliser and irrigation roughly triple cereal yields in Asia and Latin America between the 1960s and 1990s. Famine predictions for the late 20th century failed largely because of it.", w:"Green_Revolution"},
+  {y:1989, n:"The World Wide Web", d:"Berners-Lee proposes it at CERN in 1989 and releases it without patent or fee. Within a generation most of humanity is connected to the same information system — the fastest adoption of any technology in history.", w:"World_Wide_Web"},
+  {y:1991, n:"End of the Cold War", d:"The Berlin Wall opens in 1989 and the Soviet Union dissolves in 1991, ending a forty-five-year global standoff. Fifteen new states appear, and Europe's map is redrawn without a general war for the first time in centuries.", w:"Dissolution_of_the_Soviet_Union"}
+];
+
+/* ============================ DATA INJECTED ABOVE ======================== */
+const REGIONS = [].concat(REGIONS_1, REGIONS_2, REGIONS_3);
+
+const ERAS = [
+  {n:"PREHISTORY", from:-50000, to:-3300},
+  {n:"EARLY BRONZE AGE", from:-3300, to:-2000},
+  {n:"BRONZE AGE", from:-2000, to:-1200},
+  {n:"IRON AGE", from:-1200, to:-500},
+  {n:"CLASSICAL ANTIQUITY", from:-500, to:500},
+  {n:"THE MIDDLE AGES", from:500, to:1500},
+  {n:"THE MODERN ERA", from:1500, to:2030}
+];
+
+/* piecewise time scale: recent centuries get more room */
+const SEGS = [
+  [-50000,-12000, 46],
+  [-12000,-4000, 92],
+  [-4000,-2000, 132],
+  [-2000,-500, 246],
+  [-500,500, 430],
+  [500,1500, 520],
+  [1500,1800, 380],
+  [1800,1900, 250],
+  [1900,2030, 520]
+];
+const OFF = 118;                       // left gutter for lane labels
+let acc = 0;
+const SEGX = SEGS.map(s => { const o = acc; acc += s[2]; return [s[0],s[1],s[2],o]; });
+const TOTAL = acc + OFF + 240;
+
+function X(y){
+  if (y <= SEGX[0][0]) return OFF;
+  for (const [a,b,w,o] of SEGX){
+    if (y >= a && y <= b) return OFF + o + (y-a)/(b-a)*w;
+  }
+  return OFF + acc;
+}
+const NOW = 2026;
+function shade(hex,f){
+  const n = parseInt(hex.slice(1),16);
+  const r = Math.round((n>>16)*f), g = Math.round((n>>8&255)*f), b = Math.round((n&255)*f);
+  return `rgb(${r},${g},${b})`;
+}
+const fmt = (y,a) => (y===null?"—":(a?"c. ":"") + (y<0 ? Math.abs(y)+" BCE" : y+" CE"));
+const span = (a,b,ap) => fmt(a,ap) + " – " + (b>=NOW ? "present" : fmt(b));
+const wiki = t => "https://en.wikipedia.org/wiki/" + t;
+
+/* ---------------------------------------------------------------- map --- */
+const NUDGE = {
+  uk:[-14,-14,"end"], portugal:[-16,10,"end"], spain:[-8,16,"end"], france:[-14,4,"end"],
+  germany:[6,-14,"start"], austria:[16,6,"start"], italy:[10,18,"start"],
+  greece:[8,16,"start"], turkey:[14,-6,"start"], egypt:[6,16,"start"],
+  iraq:[12,-9,"start"], iran:[14,9,"start"], india:[8,15,"start"],
+  china:[10,-9,"start"], japan:[12,10,"start"], usa:[-10,-11,"end"],
+  canada:[-10,-10,"end"], mexico:[-9,10,"end"], argentina:[10,8,"start"],
+  australia:[10,12,"start"]
+};
+const MW = 1000, MH = 470, mx = l => (l+180)/360*MW, my = l => (78-l)/156*MH;
+
+function drawMap(){
+  let g = "";
+  for (let lon=-150; lon<=150; lon+=30)
+    g += `<line class="grat" x1="${mx(lon)}" y1="0" x2="${mx(lon)}" y2="${MH}"/>`;
+  for (let lat=-60; lat<=60; lat+=30)
+    g += `<line class="${lat===0?'grat-eq':'grat'}" x1="0" y1="${my(lat)}" x2="${MW}" y2="${my(lat)}"/>`;
+  g += `<text class="gratlabel" x="6" y="${my(0)-6}">EQUATOR</text>`;
+  g += `<text class="gratlabel" x="6" y="${my(30)-6}">30°N</text>`;
+  g += `<text class="gratlabel" x="6" y="${my(60)-6}">60°N</text>`;
+
+  let n = "";
+  REGIONS.forEach(r => {
+    const x = mx(r.lon), y = my(r.lat);
+    const [dx,dy,an] = NUDGE[r.id] || [10,4,"start"];
+    n += `<g class="node" data-id="${r.id}" tabindex="0" role="button" aria-label="${r.name}">
+      <circle class="halo" cx="${x}" cy="${y}" r="13" fill="${r.hue}"/>
+      <line x1="${x}" y1="${y}" x2="${x+dx*.72}" y2="${y+dy*.72}"/>
+      <circle class="dot" cx="${x}" cy="${y}" r="4.6" fill="${r.hue}"/>
+      <text x="${x+dx}" y="${y+dy}" text-anchor="${an}">${r.name.toUpperCase()}</text>
+    </g>`;
+  });
+  document.getElementById("mapwrap").innerHTML =
+    `<svg viewBox="0 0 ${MW} ${MH}" xmlns="http://www.w3.org/2000/svg">${g}${n}</svg>`;
+  document.querySelectorAll(".node").forEach(el => {
+    el.addEventListener("click", () => show(el.dataset.id));
+    el.addEventListener("keydown", e => { if(e.key==="Enter"||e.key===" ") {e.preventDefault(); show(el.dataset.id);} });
+  });
+}
+
+function drawStrip(){
+  document.getElementById("strip").innerHTML = REGIONS.map(r =>
+    `<button class="chip" data-id="${r.id}">${r.flag} ${r.name}</button>`).join("");
+  document.querySelectorAll(".chip").forEach(el =>
+    el.addEventListener("click", () => show(el.dataset.id)));
+}
+
+/* ------------------------------------------------------------ timeline -- */
+let current = null;
+
+function show(id){
+  const r = REGIONS.find(x => x.id === id);
+  if (!r) return;
+  current = r;
+  document.getElementById("about").classList.remove("on");
+  document.getElementById("region").classList.remove("hide");
+  document.querySelectorAll(".chip").forEach(c => {
+    const on = c.dataset.id === id;
+    c.classList.toggle("on", on);
+    c.style.background = on ? r.hue : "";
+    c.style.borderColor = on ? r.hue : "";
+  });
+  document.querySelectorAll(".node").forEach(n => n.classList.toggle("on", n.dataset.id === id));
+
+  document.getElementById("rflag").textContent = r.flag;
+  document.getElementById("rkick").textContent =
+    r.periods.length + " PERIODS · " + r.pins.length + " MARKERS";
+  document.getElementById("rname").textContent = r.name;
+  document.getElementById("rintro").textContent = r.intro;
+  render(r);
+  document.getElementById("region").scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+function render(r){
+  const c = document.getElementById("canvas");
+  const RIB = 54, PINTOP = 132, ROWH = 21, WORLDGAP = 26;
+  let h = "";
+
+  /* era bands + gridlines */
+  ERAS.forEach(e => {
+    const x1 = X(Math.max(e.from,-50000)), x2 = X(Math.min(e.to,2030));
+    h += `<div class="eraband" style="left:${x1}px;width:${x2-x1}px">${e.n}</div>`;
+    h += `<div class="gridline" style="left:${x1}px"></div>`;
+  });
+  [-10000,-5000,-3000,-2000,-1000,-500,1,500,1000,1500,1800,1900,2000].forEach(y => {
+    h += `<div class="gridline" style="left:${X(y)}px;opacity:.55"></div>`;
+    h += `<div class="ytick" style="left:${X(y)}px">${y===1?"1 CE":fmt(y)}</div>`;
+  });
+
+  /* period ribbon */
+  h += `<div class="lanelabel" style="top:${RIB+24}px">${r.name.toUpperCase()}</div>`;
+  r.periods.forEach((p,i) => {
+    const a = X(p.y), b = X(i+1 < r.periods.length ? r.periods[i+1].y : 2026);
+    const w = Math.max(b-a, 3);
+    const f = [1, .88, .76][i % 3];
+    h += `<div class="blk${w<74?" thin":""}" data-k="p" data-i="${i}"
+      style="left:${a}px;width:${w}px;top:${RIB}px;background:${shade(r.hue,f)}">
+      <div class="bn">${p.n}</div><div class="by">${fmt(p.y,p.a)}</div></div>`;
+  });
+
+  /* region pins */
+  const rows = [];
+  const place = (list, cls, base) => {
+    let out = "", maxrow = 0;
+    list.slice().sort((a,b)=>a.y-b.y).forEach((pn,i) => {
+      const x = X(pn.y), wEst = pn.n.length * 6.1 + 26;
+      let row = 0;
+      while (rows[cls+row] !== undefined && rows[cls+row] > x - 4) row++;
+      rows[cls+row] = x + wEst;
+      maxrow = Math.max(maxrow, row);
+      const top = base + row * ROWH;
+      out += `<div class="stem" style="left:${x}px;top:${RIB+66}px;height:${top-RIB-66+6}px"></div>`;
+      out += `<div class="pin ${cls}" data-k="${cls}" data-i="${i}" style="left:${x-3}px;top:${top}px">
+        <i style="background:${cls==='w' ? '#6f7a8d' : (pn.t==='milestone' ? 'var(--gold)' : r.hue)}"></i>
+        <span>${pn.n}</span></div>`;
+    });
+    return [out, maxrow];
+  };
+
+  const sortedPins = r.pins.slice().sort((a,b)=>a.y-b.y);
+  const [pinHtml, pmax] = place(sortedPins, "r", PINTOP);
+  h += pinHtml;
+
+  const wBase = PINTOP + (pmax+1)*ROWH + WORLDGAP;
+  h += `<div class="worldrule" style="top:${wBase-13}px;width:${TOTAL}px"></div>`;
+  h += `<div class="lanelabel" style="top:${wBase-9}px">EVERYWHERE ELSE</div>`;
+  const [wHtml, wmax] = place(WORLD, "w", wBase);
+  h += wHtml;
+
+  c.style.width = TOTAL + "px";
+  c.style.height = (wBase + (wmax+1)*ROWH + 24) + "px";
+  c.innerHTML = h;
+
+  c.querySelectorAll("[data-k]").forEach(el => el.addEventListener("click", () => {
+    const k = el.dataset.k, i = +el.dataset.i;
+    c.querySelectorAll(".sel").forEach(s => s.classList.remove("sel"));
+    el.classList.add("sel");
+    if (k === "p") openPeriod(r, i);
+    if (k === "r") openPin(r, sortedPins[i]);
+    if (k === "w") openWorld(WORLD.slice().sort((a,b)=>a.y-b.y)[i]);
+  }));
+
+  /* open where this column's own history starts */
+  document.getElementById("tlscroll").scrollLeft = Math.max(0, X(r.periods[0].y) - 70);
+}
+
+/* --------------------------------------------------------- drawer ------- */
+const drawer = document.getElementById("drawer"), scrim = document.getElementById("scrim");
+
+function openDrawer(kick, kickColor, title, when, paras, meta){
+  drawer.innerHTML =
+    `<button class="close" id="dclose">CLOSE ✕</button>
+     <div class="dkick" style="color:${kickColor}">${kick}</div>
+     <h3>${title}</h3>
+     <div class="dwhen">${when}</div>
+     <div class="dbody">${paras.map(p=>`<p>${p}</p>`).join("")}</div>
+     <dl class="meta">${meta}</dl>`;
+  drawer.classList.add("on"); scrim.classList.add("on");
+  document.getElementById("dclose").onclick = closeDrawer;
+  drawer.scrollTop = 0;
+}
+function closeDrawer(){
+  drawer.classList.remove("on"); scrim.classList.remove("on");
+  document.querySelectorAll(".sel").forEach(s => s.classList.remove("sel"));
+}
+scrim.onclick = closeDrawer;
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeDrawer(); });
+
+function sourceRow(w, extra){
+  return `<dt>SOURCE</dt><dd><a href="${wiki(w)}" target="_blank" rel="noopener">Wikipedia — ${w.replace(/_/g," ")}</a>${extra||""}</dd>`;
+}
+
+/* what else was going on, computed from the other columns */
+function simultaneous(year, skipId){
+  const out = [];
+  REGIONS.forEach(r => {
+    if (r.id === skipId) return;
+    let found = null;
+    r.periods.forEach((p,i) => {
+      const end = i+1 < r.periods.length ? r.periods[i+1].y : NOW;
+      if (year >= p.y && year < end) found = p;
+    });
+    if (found) out.push(`<b>${found.n}</b> <em>· ${r.name}</em>`);
+  });
+  return out.length ? `<span class="simul">${out.join("<br>")}</span>` : "—";
+}
+
+function openPeriod(r, i){
+  const p = r.periods[i];
+  const end = i+1 < r.periods.length ? r.periods[i+1].y : NOW;
+  const prev = i > 0 ? r.periods[i-1].n : null;
+  const next = i+1 < r.periods.length ? r.periods[i+1].n : null;
+  const mid = Math.round(p.y + (Math.min(end,NOW) - p.y) * 0.5);
+  let meta = `<dt>LASTS</dt><dd>${Math.round(Math.min(end,NOW)-p.y).toLocaleString()} years</dd>`;
+  meta += `<dt>SEQUENCE</dt><dd>${prev ? "after the "+prev : "opens the column"}${next ? ", before the "+next : ", and runs to the present"}</dd>`;
+  meta += `<dt>ELSEWHERE IN ${fmt(mid)}</dt><dd>${simultaneous(mid, r.id)}</dd>`;
+  meta += sourceRow(p.w);
+  openDrawer(r.name.toUpperCase() + " · PERIOD", r.hue, p.n, span(p.y, end, p.a), [p.d, p.x], meta);
+}
+
+function openPin(r, pn){
+  const kind = pn.t === "milestone" ? "MILESTONE OF CIVILISATION" : "HISTORICAL LANDMARK";
+  const col = pn.t === "milestone" ? "var(--gold)" : r.hue;
+  let meta = `<dt>PLACE</dt><dd>${r.name}</dd>`;
+  meta += `<dt>ELSEWHERE IN ${fmt(pn.y)}</dt><dd>${simultaneous(pn.y, null)}</dd>`;
+  meta += sourceRow(pn.w);
+  openDrawer(kind, col, pn.n, fmt(pn.y, true), [pn.d], meta);
+}
+
+function openWorld(ev){
+  let meta = `<dt>WHY IT IS HERE</dt><dd>Not on the original poster. Added because its effects
+    cross every column on this chart.</dd>`;
+  meta += `<dt>ELSEWHERE IN ${fmt(ev.y)}</dt><dd>${simultaneous(ev.y, null)}</dd>`;
+  meta += sourceRow(ev.w);
+  openDrawer("WORLD EVENT", "#8c95a6", ev.n, fmt(ev.y, true), [ev.d], meta);
+}
+
+/* ---------------------------------------------------------- about ------- */
+document.getElementById("about").innerHTML = `
+  <h2>About this atlas</h2>
+  <blockquote>The universe is made of stories, not of atoms.
+    <cite>MURIEL RUKEYSER</cite></blockquote>
+  <p>This began as a printed timeline poster: twenty vertical columns, one per modern
+     country, each stacking that place's political history from the Bronze Age to now.
+     Read down a column and you get a story. Read across and you get something better —
+     the discovery that the Delhi Sultanate was four years old when Song China already had
+     paper money and a magnetic compass.</p>
+  <p>A poster cannot tell you what any of it <em>is</em>. So everything here is clickable.
+     Every block, marker and event opens a short account of what it was, when, and what was
+     happening everywhere else at the same moment — that last part computed live from the
+     other nineteen columns.</p>
+  <p>The lane at the bottom, <em>everywhere else</em>, is not from the poster. It holds the
+     events whose effects crossed every column: the Bronze Age collapse, the Black Death,
+     the Columbian exchange, the industrial revolution, the world wars. The bar for
+     inclusion was deliberately high.</p>
+  <p>Dates follow the poster where the poster has one, which means they smooth over
+     contested boundaries and overlapping states. A few — the United Kingdom dated to 1917,
+     Turkey's column opening with the Hittites — are editorial choices rather than settled
+     scholarship. Learn the shape here; expect the details to be argued about.</p>
+  <p>Every entry links to a source. Landmarks are placed at their date of construction or
+     use, which sometimes sits far from the political block beside them: Stonehenge,
+     Lascaux and Altamira all predate their neighbouring civilisations by thousands of
+     years.</p>`;
+
+document.getElementById("navAbout").onclick = () => {
+  document.getElementById("about").classList.toggle("on");
+  document.getElementById("region").classList.toggle("hide");
+  document.getElementById("about").scrollIntoView({behavior:"smooth"});
+};
+document.getElementById("home").onclick = () => window.scrollTo({top:0,behavior:"smooth"});
+
+document.getElementById("foot").innerHTML =
+  `ATLAS OF ELAPSED TIME · ${REGIONS.length} COLUMNS · ` +
+  `${REGIONS.reduce((n,r)=>n+r.periods.length,0)} PERIODS · ` +
+  `${REGIONS.reduce((n,r)=>n+r.pins.length,0)} LANDMARKS AND MILESTONES · ` +
+  `${WORLD.length} WORLD EVENTS<br>` +
+  `Coloured blocks show continuity in time, not territory or population. ` +
+  `Sources link to Wikipedia.`;
+
+drawMap(); drawStrip(); show("egypt");
+</script>
+</body>
+</html>

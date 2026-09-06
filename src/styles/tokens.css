@@ -1,0 +1,22 @@
+:root {
+  --bg: #0b0d12;
+  --bg2: #11141c;
+  --panel: #151924;
+  --line: #242a38;
+  --line2: #333b4d;
+  --ink: #e6e2d8;
+  --dim: #8c95a6;
+  --dimmer: #5f6878;
+  --gold: #d8b25f;
+  --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
+    Georgia, serif;
+  --sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Helvetica, Arial,
+    sans-serif;
+
+  /* Every block is this wide, whether it covers ninety years or thirteen
+     thousand. Duration is read off the dates, not the width. */
+  --col-w: 210px;
+  --col-gap: 12px;
+  /* Sticky left column holding the three row labels. */
+  --gutter-w: 104px;
+}

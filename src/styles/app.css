@@ -1,0 +1,1089 @@
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--serif);
+  -webkit-font-smoothing: antialiased;
+}
+body { overflow-x: hidden; }
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+a { color: var(--gold); text-underline-offset: 3px; }
+:focus-visible { outline: 1px solid var(--gold); outline-offset: 3px; }
+
+.wrap { max-width: 1180px; margin: 0 auto; padding: 0 22px; }
+.hide { display: none; }
+
+/* ---------- masthead ---------- */
+.mast {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 0 18px;
+  border-bottom: 1px solid var(--line);
+}
+.wordmark {
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: .22em;
+  color: var(--ink);
+  text-decoration: none;
+}
+.mast nav {
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: .18em;
+  color: var(--dim);
+  display: flex;
+  gap: 18px;
+}
+.mast nav a { color: var(--dim); text-decoration: none; }
+.mast nav a:hover, .mast nav button:hover { color: var(--ink); }
+/* The page you are on. The wordmark is the way home, so there is no Home link. */
+.mast nav a[aria-current="page"] { color: var(--ink); }
+
+/* ---------- hero ---------- */
+.hero { padding: 56px 0 14px; max-width: 34em; }
+.kick {
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: .2em;
+  color: var(--dim);
+}
+.hero .kick { margin-bottom: 20px; }
+.hero h1 {
+  font-size: clamp(38px, 7vw, 64px);
+  line-height: 1.02;
+  margin: 0 0 18px;
+  font-weight: 400;
+  letter-spacing: -.015em;
+}
+.hero p { font-size: 17px; line-height: 1.65; color: var(--dim); margin: 0; }
+
+/* ---------- map ---------- */
+.mapwrap { margin: 0; overflow-x: auto; overflow-y: hidden; padding-bottom: 6px; }
+.mapwrap svg { display: block; min-width: 760px; width: 100%; height: auto; }
+
+/* Natural Earth 110m outlines, projected at build time. */
+.landfill { fill: #141824; stroke: #232a3a; stroke-width: .5; }
+.landborder { fill: none; stroke: #1e2432; stroke-width: .5; }
+.landfill, .landborder { vector-effect: non-scaling-stroke; }
+
+.grat { stroke: rgba(51, 59, 77, .38); stroke-width: .6; fill: none; }
+.grat-eq { stroke: rgba(51, 59, 77, .7); stroke-width: .8; stroke-dasharray: 4 5; fill: none; }
+.gratlabel { font-family: var(--sans); font-size: 8.5px; fill: var(--dimmer); letter-spacing: .12em; }
+
+.node { cursor: pointer; }
+.node circle.dot { stroke: var(--bg); stroke-width: 1.5; transition: r .12s; }
+
+/* No box around the selected place. A rectangle around a dot on a map reads as
+   a second shape that means something; the halo and the lit label do the job,
+   and they double as the keyboard focus indicator. */
+.node:focus, .node:focus-visible,
+.locator:focus, .locator:focus-visible { outline: none; }
+.node:focus-visible circle.halo { opacity: .34; }
+.node:focus-visible text { fill: var(--ink); }
+.locator:focus-visible rect { opacity: 1; stroke-width: 1.2; }
+.node circle.hit { fill: transparent; }
+/* Portugal and Spain are 17px apart and their dots can never both be
+   comfortable targets. Their names are 100px apart, so the name is a target
+   too — sized to the label the placement algorithm actually chose. */
+.node rect.labelhit { fill: transparent; }
+.node.nolabel rect.labelhit { pointer-events: none; }
+.node text {
+  font-family: var(--sans);
+  font-size: 9.5px;
+  letter-spacing: .06em;
+  fill: var(--dim);
+  transition: fill .12s;
+  paint-order: stroke;
+  stroke: var(--bg);
+  stroke-width: 2.5px;
+  stroke-linejoin: round;
+}
+.node line { display: none; }
+.node.has-leader line { display: block; stroke: #596273; stroke-width: .85; }
+.node:hover text, .node.on text { fill: var(--ink); }
+
+/* Once something is picked, everything else steps back a little. */
+svg.picked .node:not(.on) text { fill: #464e5f; }
+svg.picked .node:not(.on):hover text { fill: var(--ink); }
+svg.picked .speck:not(.on) { opacity: .26; }
+.speck.on { opacity: 1; }
+.locator.on rect { opacity: .9; }
+/* The halo is 13 units wide and invisible, but it still hit-tests: Spain's
+   halo sat on top of Portugal's dot and swallowed every click meant for it.
+   Same for the leader line, which can cross a neighbour. */
+.node circle.halo { opacity: 0; transition: opacity .12s; pointer-events: none; }
+.node line { pointer-events: none; }
+.node:hover circle.halo, .node.on circle.halo { opacity: .28; }
+
+/* ---------- map header ---------- */
+.maphead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 24px 0 14px;
+  border-top: 1px solid var(--line);
+  margin-top: 26px;
+}
+.finder { display: flex; align-items: baseline; gap: 14px; }
+.finder input {
+  width: 15em;
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 13px;
+  letter-spacing: .03em;
+  padding: 9px 12px;
+}
+.finder input::placeholder { color: var(--dimmer); }
+.finder input:focus { outline: none; border-color: var(--gold); }
+.finder-note {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dimmer);
+  white-space: nowrap;
+}
+
+/* Shown until a civilisation is picked. */
+.prompt {
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: .18em;
+  color: var(--dimmer);
+  margin: 0;
+}
+
+.backmap {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  letter-spacing: .16em;
+  color: var(--dim);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 7px 12px;
+  margin-bottom: 22px;
+}
+.backmap:hover { color: var(--ink); border-color: var(--line2); }
+
+/* ---------- region head ---------- */
+.rhead { padding: 44px 0 22px; }
+.ident { display: flex; align-items: center; gap: 22px; margin-bottom: 20px; }
+/* The flag is the civilisation's badge — at 11px it read as a smudge. */
+.ident-flag {
+  font-size: 56px;
+  line-height: 1;
+  flex: 0 0 auto;
+  filter: saturate(1.05);
+}
+.ident-text { min-width: 0; }
+.ident h2 {
+  font-size: clamp(34px, 5.4vw, 52px);
+  margin: 0 0 8px;
+  font-weight: 400;
+  letter-spacing: -.015em;
+  line-height: 1.05;
+}
+.ident-counts {
+  font-family: var(--sans);
+  font-size: 13px;
+  letter-spacing: .16em;
+  color: var(--dim);
+}
+.rhead p { font-size: 17px; line-height: 1.62; color: var(--dim); margin: 0; max-width: 40em; }
+
+/* Pick another civilisation sits after the history, not before it. */
+.regionfoot {
+  border-top: 1px solid var(--line);
+  padding: 26px 0 60px;
+  display: flex;
+  justify-content: center;
+}
+.regionfoot .backmap { margin: 0; font-size: 11.5px; padding: 11px 20px; }
+
+/* ---------- the ribbon ---------- */
+.tlouter { border-top: 1px solid var(--line); margin-top: 26px; }
+.tlbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0 14px;
+}
+.tlhint {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  letter-spacing: .16em;
+  color: var(--dimmer);
+}
+.tlnav { display: flex; gap: 8px; }
+.tlbtn {
+  width: 38px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  color: var(--dim);
+  transition: color .12s, border-color .12s, opacity .12s;
+}
+.tlbtn svg { width: 17px; height: 17px; fill: none; stroke: currentColor;
+  stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.tlbtn:hover:not(:disabled) { color: var(--ink); border-color: var(--line2); }
+.tlbtn:disabled { opacity: .3; cursor: default; }
+/* A button carrying a word rather than an icon. */
+.tlbtn.wide {
+  width: auto;
+  padding: 0 14px;
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: .16em;
+}
+.zoomset { display: flex; gap: 8px; }
+.tlscroll {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 34px;
+  scrollbar-color: var(--line2) transparent;
+}
+.tlscroll::-webkit-scrollbar { height: 8px; }
+.tlscroll::-webkit-scrollbar-thumb { background: var(--line2); border-radius: 4px; }
+.tlinner { width: max-content; }
+
+/* Both rows use identical tracks, so era bands sit over their own columns.
+   Track 1 is the sticky label gutter; every track after it is one period. */
+.erarow, .ribbon {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-columns: var(--gutter-w);
+  grid-auto-columns: var(--col-w);
+  column-gap: var(--col-gap);
+}
+
+.gut {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--bg);
+  box-shadow: 10px 0 10px -10px var(--bg);
+  font-family: var(--sans);
+  font-size: 9px;
+  letter-spacing: .16em;
+  line-height: 1.6;
+  color: var(--dimmer);
+  padding: 12px 12px 0 0;
+}
+.gut-top { padding-top: 4px; color: var(--dim); }
+.gut-world { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 14px; }
+
+.erarow { margin-bottom: 8px; }
+.eraband {
+  font-family: var(--sans);
+  font-size: 9px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--dimmer);
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line2);
+  padding: 6px 0 0 7px;
+  min-height: 22px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.eraband.blank { border-left-color: transparent; }
+
+/* Three shared rows: card, iconic events, world events. */
+.ribbon { grid-template-rows: auto auto auto; }
+
+.blk {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid rgba(0, 0, 0, .45);
+  border-radius: 2px;
+  padding: 11px 12px 12px;
+  min-height: 118px;
+  color: #0d0f14;
+  transition: filter .12s;
+}
+.blk:hover, .blk.sel { filter: brightness(1.24); }
+.blk-n { font-size: 16px; line-height: 1.18; font-weight: 600; letter-spacing: .005em; }
+.blk-when {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  letter-spacing: .04em;
+  color: rgba(13, 15, 20, .74);
+  margin-top: auto;
+}
+.blk-len {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  letter-spacing: .04em;
+  color: rgba(13, 15, 20, .58);
+}
+
+/* Things older than the civilisation's first named period. */
+.blk.pro {
+  background: transparent;
+  border: 1px dashed var(--line2);
+  color: var(--dimmer);
+  cursor: default;
+}
+.blk.pro:hover { filter: none; }
+.blk.pro .blk-n { color: var(--dim); font-weight: 400; font-size: 15px; }
+.blk.pro .blk-when, .blk.pro .blk-len { color: var(--dimmer); }
+
+/* These are the most clickable things on the page and used to look like
+   footnotes. Given a surface, a border that appears on hover, and room. */
+.mark {
+  display: grid;
+  grid-template-columns: 9px 1fr;
+  gap: 3px 9px;
+  align-items: start;
+  padding: 9px 10px;
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, .022);
+  transition: background .12s, border-color .12s, transform .12s;
+}
+.mark i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  display: block;
+  margin-top: 4px;
+}
+.mark.world i { border-radius: 0; transform: rotate(45deg); width: 7px; height: 7px; }
+.mark-n {
+  font-family: var(--sans);
+  font-size: 12.5px;
+  line-height: 1.32;
+  color: #b9c0cc;
+  letter-spacing: .01em;
+}
+.mark-y {
+  grid-column: 2;
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: .1em;
+  color: var(--dimmer);
+  white-space: nowrap;
+}
+.mark:hover, .mark.sel {
+  background: rgba(255, 255, 255, .06);
+  border-color: var(--line2);
+}
+.mark:hover .mark-n, .mark.sel .mark-n { color: var(--ink); }
+.lane { padding: 12px 2px 4px; display: flex; flex-direction: column; gap: 7px; }
+.lane-world { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 14px; }
+
+/* ---------- detail sheet ---------- */
+/* Was a 440px rail on the right. Once periods carry 400 words plus an
+   "elsewhere" list of nineteen entries, that column is a gutter with a book in
+   it — so this is a wide centred sheet with a real measure instead. */
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: rgba(4, 5, 8, .72);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s;
+  z-index: 40;
+}
+.scrim.on { opacity: 1; pointer-events: auto; }
+
+.sheet {
+  position: fixed;
+  z-index: 50;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -47%);
+  width: min(940px, calc(100vw - 40px));
+  max-height: min(86vh, 880px);
+  overflow-y: auto;
+  background: var(--bg2);
+  border: 1px solid var(--line2);
+  border-radius: 5px;
+  padding: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .18s ease, transform .18s ease;
+}
+.sheet.on { opacity: 1; pointer-events: auto; transform: translate(-50%, -50%); }
+
+.sheet-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: linear-gradient(var(--bg2) 78%, rgba(21, 25, 36, 0));
+  padding: 30px 40px 20px;
+}
+.sheet .close {
+  position: absolute;
+  top: 22px;
+  right: 26px;
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: .18em;
+  color: var(--dim);
+}
+.sheet .close:hover { color: var(--ink); }
+.dkick {
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: .2em;
+  margin-bottom: 14px;
+}
+.sheet h3 {
+  font-size: clamp(30px, 4vw, 42px);
+  line-height: 1.08;
+  margin: 0 0 8px;
+  font-weight: 400;
+  letter-spacing: -.015em;
+  max-width: 16em;
+}
+.dwhen {
+  font-family: var(--sans);
+  font-size: 12.5px;
+  color: var(--gold);
+  letter-spacing: .06em;
+}
+
+.dbody { padding: 4px 40px 0; }
+.dbody p {
+  font-size: 17px;
+  line-height: 1.7;
+  color: #cfcabf;
+  margin: 0 0 18px;
+  max-width: 40em;          /* a real measure, roughly 70 characters */
+}
+.dbody p:first-child {
+  font-size: 19.5px;
+  line-height: 1.55;
+  color: var(--ink);
+  margin-bottom: 22px;
+}
+
+.meta {
+  border-top: 1px solid var(--line);
+  margin: 30px 40px 36px;
+  padding-top: 24px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 22px 32px;
+}
+.meta dt {
+  font-family: var(--sans);
+  font-size: 9.5px;
+  letter-spacing: .18em;
+  color: var(--dimmer);
+  margin-bottom: 7px;
+}
+.meta dd { margin: 0; font-size: 14.5px; line-height: 1.6; color: var(--dim); }
+/* The wide rows — everything that was happening elsewhere, and the source —
+   run the full width under the short ones. */
+.meta .wide { grid-column: 1 / -1; }
+.meta dd a { color: var(--gold); text-decoration: none; border-bottom: 1px solid rgba(216, 178, 95, .3); }
+.meta dd a:hover { border-bottom-color: var(--gold); }
+.simul {
+  display: block;
+  font-size: 14px;
+  color: var(--dim);
+  line-height: 1.6;
+  columns: 3 190px;
+  column-gap: 32px;
+}
+.simul > span { display: block; break-inside: avoid; }
+.simul-go {
+  display: block;
+  width: 100%;
+  padding: 4px 6px 4px 0;
+  border-radius: 2px;
+  color: inherit;
+  transition: color .12s, background .12s;
+}
+.simul-go:hover, .simul-go:focus-visible { background: rgba(255, 255, 255, .05); }
+.simul-go:hover b, .simul-go:focus-visible b { color: var(--gold); }
+.simul b { color: #cfcabf; font-weight: 400; }
+.simul em { font-style: normal; color: var(--dimmer); }
+
+/* ---------- world map page ---------- */
+/* No max-width: the heading takes the same margin on the right as on the left. */
+.pagehead { padding: 46px 0 8px; }
+.pagehead h1 {
+  font-size: clamp(32px, 5.4vw, 50px);
+  line-height: 1.04;
+  margin: 0;
+  font-weight: 400;
+  letter-spacing: -.015em;
+}
+
+.worldhead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 24px 0 14px;
+  border-top: 1px solid var(--line);
+  margin-top: 26px;
+}
+/* The find field takes the slack; the buttons never shrink or stack. */
+.worldhead .finder { flex: 1 1 auto; min-width: 0; position: relative; }
+
+/* Matches drop under the field and can be picked with mouse or keyboard. */
+.findlist {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 5px);
+  left: 0;
+  width: 17em;
+  max-height: 17em;
+  overflow-y: auto;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  background: var(--bg2);
+  border: 1px solid var(--line2);
+  border-radius: 3px;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, .5);
+}
+.findlist.hide { display: none; }
+.findlist li {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 7px 9px;
+  border-radius: 2px;
+  cursor: pointer;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  color: var(--dim);
+}
+.findlist li .fl-cap {
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--dimmer);
+  white-space: nowrap;
+}
+.findlist li:hover, .findlist li[aria-selected="true"] {
+  background: rgba(255, 255, 255, .06);
+  color: var(--ink);
+}
+.findlist li:hover .fl-cap, .findlist li[aria-selected="true"] .fl-cap { color: #eda98d; }
+
+/* Shown once on arrival, then gets out of the way — by itself after five
+   seconds, or immediately if you close it. */
+.maptoast {
+  position: fixed;
+  z-index: 55;
+  bottom: 18px;
+  left: 18px;
+  max-width: 22em;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 13px 12px 15px;
+  background: var(--bg2);
+  border: 1px solid var(--line2);
+  border-radius: 3px;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, .5);
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.65;
+  letter-spacing: .04em;
+  color: var(--dim);
+  transition: opacity .5s ease, transform .5s ease;
+}
+.maptoast.gone { opacity: 0; transform: translateY(8px); pointer-events: none; }
+.maptoast-x {
+  flex: 0 0 auto;
+  font-size: 11px;
+  line-height: 1;
+  padding: 2px 3px;
+  color: var(--dimmer);
+  transition: color .12s;
+}
+.maptoast-x:hover { color: var(--ink); }
+.worldhead .finder-note { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.worldhead .zoomset { flex: 0 0 auto; flex-wrap: nowrap; }
+
+/* Just the zoom readout now, sitting under the right edge of the map. */
+.worldfoot {
+  display: flex;
+  justify-content: flex-end;
+  align-items: baseline;
+  padding: 10px 0 0;
+  min-height: 16px;
+}
+.worldzoom {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  letter-spacing: .18em;
+  color: var(--gold);
+}
+
+/**
+ * /map keeps its own palette rather than the site's near-black and gold. A map
+ * should read as a map: water behind land, land lighter than water, and a
+ * selection colour that is not the same gold used for links — dark type on
+ * yellow was unreadable, and gold land next to a gold highlight was worse.
+ */
+/* Full-bleed: the map breaks out of the page's 1180px column and runs the
+   whole width of the window, so nothing competes with it. */
+.worldwrap {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  border-left: none;
+  border-right: none;
+  border-radius: 0;
+
+  --water: #142130;
+  --land: #33424f;
+  --coast: #5a6c81;
+  --pick: #d2684a;
+  --pick-edge: #f4e6df;
+
+  overflow: hidden;          /* panning replaces scrolling here */
+  background: var(--water);
+  border-top: 1px solid #223144;
+  border-bottom: 1px solid #223144;
+  cursor: grab;
+  touch-action: none;
+}
+.worldwrap.panning { cursor: grabbing; }
+.worldwrap svg { display: block; width: 100%; height: auto; }
+
+/* One path per country. The stroke is the border, and non-scaling keeps it a
+   hairline however wide the map is drawn. */
+.cty {
+  fill: var(--land);
+  stroke: var(--coast);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  transition: fill .1s;
+  cursor: pointer;
+}
+.cty:hover, .cty.on { fill: var(--pick); stroke: var(--pick-edge); }
+.cty:focus-visible { outline: none; fill: var(--pick); stroke: var(--pick-edge); }
+
+/* Monaco is about one part in twenty thousand of the map's width, so anything
+   too small to see is drawn at a readable minimum size instead. It is painted
+   exactly like land — same fill, same border — so it reads as a small country
+   rather than as an annotation stuck on top of the map. */
+.marker {
+  fill: var(--land);
+  stroke: var(--coast);
+  cursor: pointer;
+  transition: fill .1s, stroke .1s;
+}
+.marker:hover, .marker.on { fill: var(--pick); stroke: var(--pick-edge); }
+.marker.hide { display: none; }
+
+/* Cities appear as you zoom, biggest first. They are labels on the map, not
+   targets — hovering still reports the country underneath. */
+.cities.hide { visibility: hidden; }
+.city { pointer-events: none; }
+.city circle { fill: #cfdae6; }
+/* Light type with a dark halo, so a name stays readable whether it sits on
+   water, on land, or on a country that happens to be selected. */
+.city text {
+  font-family: var(--sans);
+  font-size: 9px;
+  letter-spacing: .04em;
+  fill: #f2f6fa;
+  paint-order: stroke;
+  stroke: rgba(9, 15, 22, .92);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+}
+
+/* Follows the pointer, so it is positioned against the viewport. */
+.worldtip {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  background: var(--bg2);
+  border: 1px solid var(--line2);
+  border-radius: 3px;
+  padding: 9px 13px 10px;
+  max-width: 18em;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .5);
+}
+.tip-name {
+  display: block;
+  font-size: 16px;
+  line-height: 1.2;
+  color: var(--ink);
+  margin-bottom: 3px;
+}
+.tip-cap {
+  display: block;
+  font-family: var(--sans);
+  font-size: 10.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #eda98d;            /* the map's accent, not the site's gold */
+}
+.tip-none { color: var(--dimmer); }
+
+.worldnote {
+  font-family: var(--sans);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--dimmer);
+  max-width: 42em;
+  border-top: 1px solid var(--line);
+  margin-top: 22px;
+  padding: 18px 0 60px;
+}
+
+/* ---------- quiz ---------- */
+.quiz-page .pagehead,
+.qsetup,
+.quiz,
+.qdone {
+  width: 100%;
+  max-width: 44em;
+  margin-left: auto;
+  margin-right: auto;
+}
+.quiz-page .pagehead {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px 26px;
+}
+.qsetup { border-top: 1px solid var(--line); margin-top: 26px; padding-top: 24px; }
+.qsetup.hide, .qdone.hide { display: none; }
+.qlead {
+  font-size: 16.5px;
+  line-height: 1.6;
+  color: var(--dim);
+  margin: 0 0 20px;
+  max-width: 34em;
+}
+.qcontinents {
+  display: grid;
+  grid-template-columns: minmax(0, 320px);
+  gap: 8px;
+}
+.qchip {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  width: 100%;
+  font-family: var(--sans);
+  font-size: 11.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--dimmer);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 7px 12px;
+  transition: color .12s, border-color .12s, background .12s;
+}
+.qchip { transition: color .12s, border-color .12s, background .12s, opacity .12s; }
+/* Locked in once the set starts. */
+.qchip:disabled { cursor: default; opacity: .5; }
+.qchip:disabled:not(.on) { opacity: .28; }
+.qchip.on { color: var(--ink); border-color: var(--gold); background: rgba(216, 178, 95, .08); }
+.qchip-n { color: var(--dimmer); font-size: 10px; margin-left: 16px; }
+.qchip.on .qchip-n { color: var(--gold); }
+
+.qstartrow { display: flex; align-items: center; gap: 16px; padding: 24px 0 8px; }
+.qstart {
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: .18em;
+  color: var(--bg);
+  background: var(--gold);
+  border-radius: 2px;
+  padding: 13px 22px;
+  transition: opacity .12s, filter .12s;
+}
+.qstart:hover:not(:disabled) { filter: brightness(1.1); }
+.qstart:disabled { opacity: .3; cursor: default; }
+.qtotal {
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: .18em;
+  color: var(--dimmer);
+}
+
+.quiz { padding: 28px 0 0; }
+.quiz.hide { display: none; }
+.qplayhead {
+  display: flex;
+  align-items: center;
+  max-width: 44em;
+  margin-bottom: 24px;
+}
+.qplayhead .qcount { margin: 0; }
+.quiz-page .qrunning {
+  margin: 0 0 0 auto;
+  text-align: right;
+  font-family: var(--sans);
+  font-size: 13px;
+  color: #7fc79a;
+}
+.quiz-page .qrunning.hide {
+  display: none;
+}
+.qexit {
+  font-family: var(--sans);
+  font-size: 10px;
+  color: var(--dim);
+  border: 1px solid var(--line2);
+  border-radius: 2px;
+  padding: 10px 14px;
+}
+.qexit:hover { color: var(--ink); border-color: var(--dim); }
+.qcount {
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: .18em;
+  color: var(--dimmer);
+  margin: 0 0 14px;
+  min-height: 14px;
+}
+.qcountry {
+  font-size: clamp(34px, 6vw, 58px);
+  line-height: 1.05;
+  font-weight: 400;
+  letter-spacing: -.015em;
+  margin: 0;
+  text-wrap: balance;
+}
+.qquestionhead {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  margin: 0 0 30px;
+}
+.qoptions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 10px;
+  max-width: 44em;
+}
+.qopt {
+  font-size: 17px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, .03);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 16px 18px;
+  transition: background .12s, border-color .12s;
+}
+.qopt:hover:not(:disabled) { background: rgba(255, 255, 255, .07); border-color: var(--line2); }
+.qopt:disabled { cursor: default; }
+/* Green and red are doing real work here, so each also changes weight or
+   border, for anyone who cannot separate the two by colour. */
+.qopt.right {
+  border-color: #4f9d6b;
+  background: rgba(79, 157, 107, .16);
+  font-weight: 600;
+}
+.qopt.wrong {
+  border-color: #b3574a;
+  background: rgba(179, 87, 74, .14);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+
+.qafter {
+  display: flex;
+  align-items: center;
+  min-height: 46px;
+  padding: 24px 0 22px;
+}
+.qsession-actions {
+  display: flex;
+  gap: 10px;
+  padding: 20px 0 60px;
+  border-top: 1px solid var(--line);
+}
+.qverdict { font-size: 19px; letter-spacing: -.01em; }
+.qverdict.is-right { color: #7fc79a; }
+.qverdict.is-wrong { color: #e0907f; }
+.qnext {
+  font-family: var(--sans);
+  font-size: 11px;
+  letter-spacing: .16em;
+  color: var(--dim);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 10px 16px;
+}
+.qnext:hover { color: var(--ink); border-color: var(--line2); }
+.qnext span { color: var(--dimmer); font-size: 9px; letter-spacing: 0; text-transform: none; }
+.qnext.hide { display: none; }
+
+.qdone { padding: 48px 0 70px; }
+.qscore {
+  font-size: clamp(38px, 6.5vw, 64px);
+  line-height: 1.02;
+  font-weight: 400;
+  letter-spacing: -.02em;
+  margin: 0 0 10px;
+}
+.qscoreline { font-size: 17px; color: var(--dim); margin: 0 0 30px; }
+.qreview {
+  margin-top: 44px;
+  padding-top: 30px;
+  border-top: 1px solid var(--line);
+}
+.qreview.hide { display: none; }
+.qreview h3 {
+  font-size: 25px;
+  line-height: 1.2;
+  font-weight: 400;
+  margin: 0 0 18px;
+  text-wrap: balance;
+}
+.qreview-scroll { overflow-x: auto; }
+.qreview table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--sans);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.qreview th,
+.qreview td {
+  padding: 13px 12px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+.qreview thead th {
+  color: var(--dimmer);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.qreview tbody th { color: var(--ink); font-weight: 600; }
+.qreview tbody td { color: var(--dim); }
+.qreview tbody tr.is-right { background: rgba(79, 157, 107, .1); }
+.qreview tbody tr.is-wrong { background: rgba(179, 87, 74, .1); }
+.qreview tr.is-right .qreview-result { color: #7fc79a; font-weight: 600; }
+.qreview tr.is-wrong .qreview-result { color: #e0907f; font-weight: 600; }
+.qreview tr.is-wrong td[data-label="Your answer"] { text-decoration: line-through; }
+
+/* ---------- about ---------- */
+.about { padding: 50px 0 10px; max-width: 36em; }
+.about h1 {
+  font-size: clamp(30px, 5vw, 42px);
+  font-weight: 400;
+  margin: 0 0 22px;
+  letter-spacing: -.015em;
+}
+.about { padding-bottom: 70px; }
+.about p { font-size: 16.5px; line-height: 1.7; color: var(--dim); margin: 0 0 18px; }
+.about blockquote {
+  margin: 0 0 26px;
+  padding-left: 18px;
+  border-left: 1px solid var(--line2);
+  font-size: 19px;
+  line-height: 1.5;
+  color: #cfcabf;
+}
+.about blockquote cite {
+  display: block;
+  font-family: var(--sans);
+  font-size: 10.5px;
+  letter-spacing: .16em;
+  color: var(--dimmer);
+  font-style: normal;
+  margin-top: 12px;
+}
+
+@media (max-width: 640px) {
+  .mast { align-items: flex-start; gap: 16px; }
+  .mast nav {
+    max-width: 190px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px 14px;
+    font-size: 9px;
+  }
+  .qreview table,
+  .qreview tbody,
+  .qreview tr,
+  .qreview th,
+  .qreview td { display: block; }
+  .qreview thead { display: none; }
+  .qreview tr { padding: 14px 16px; border-bottom: 1px solid var(--line); }
+  .qreview th,
+  .qreview td {
+    display: grid;
+    grid-template-columns: minmax(82px, .45fr) minmax(0, 1fr);
+    gap: 12px;
+    padding: 4px 0;
+    border: 0;
+  }
+  .qreview th::before,
+  .qreview td::before {
+    content: attr(data-label);
+    color: var(--dimmer);
+    font-size: 9px;
+    font-weight: 400;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+  }
+  /* A whole card has to clear the sticky gutter, or every swipe lands half-off. */
+  :root { --col-w: 200px; --col-gap: 10px; --gutter-w: 78px; }
+  .tlscroll { scroll-snap-type: x proximity; scroll-padding-left: var(--gutter-w); }
+  .ribbon > .blk { scroll-snap-align: start; }
+  /* On a phone the sheet becomes a bottom sheet again — there is no width to
+     centre into. */
+  .sheet {
+    width: 100%;
+    max-height: 88vh;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    border-radius: 6px 6px 0 0;
+    border-left: none;
+    border-right: none;
+    border-bottom: none;
+    transform: translate(0, 3%);
+  }
+  .sheet.on { transform: none; }
+  .sheet-head { padding: 22px 20px 16px; }
+  .sheet .close { top: 16px; right: 18px; }
+  .dbody { padding: 4px 20px 0; }
+  .dbody p { font-size: 16px; }
+  .dbody p:first-child { font-size: 17.5px; }
+  .meta { margin: 24px 20px 34px; grid-template-columns: 1fr; gap: 18px; }
+  .simul { columns: 1; }
+  .hero { padding: 40px 0 8px; }
+  .rhead { padding: 32px 0 16px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

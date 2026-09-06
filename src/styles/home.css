@@ -1,0 +1,131 @@
+.home-wrap {
+  min-height: 100vh;
+}
+
+.home-main {
+  padding: clamp(48px, 8vw, 92px) 0 72px;
+}
+
+.home-hero {
+  max-width: 760px;
+  margin-bottom: clamp(42px, 7vw, 76px);
+}
+
+.home-hero .kick {
+  margin: 0 0 20px;
+}
+
+.home-hero h1 {
+  max-width: 11ch;
+  margin: 0 0 22px;
+  font-size: clamp(46px, 7.5vw, 80px);
+  font-weight: 400;
+  line-height: .98;
+  letter-spacing: -.025em;
+  text-wrap: balance;
+}
+
+.home-hero > p:last-child {
+  max-width: 38em;
+  margin: 0;
+  color: var(--dim);
+  font-size: 18px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+
+.feature-card {
+  position: relative;
+  display: flex;
+  min-height: 300px;
+  flex-direction: column;
+  padding: clamp(26px, 4vw, 42px);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.feature-card:hover,
+.feature-card:focus-visible {
+  background: var(--bg2);
+}
+
+.feature-card:focus-visible {
+  outline-offset: -4px;
+}
+
+.feature-number,
+.feature-action {
+  font-family: var(--sans);
+  font-size: 10.5px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+}
+
+.feature-number {
+  color: var(--dimmer);
+}
+
+.feature-card h2 {
+  margin: 40px 0 14px;
+  font-size: clamp(32px, 4vw, 46px);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -.015em;
+  text-wrap: balance;
+}
+
+.feature-card p {
+  max-width: 32em;
+  margin: 0 0 34px;
+  color: var(--dim);
+  font-size: 16px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.feature-action {
+  margin-top: auto;
+  color: var(--gold);
+}
+
+@media (max-width: 720px) {
+  .home-main {
+    padding-top: 42px;
+  }
+
+  .feature-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .feature-card {
+    min-height: 260px;
+  }
+}
+
+@media (max-width: 560px) {
+  .home-wrap .mast {
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .home-wrap .mast nav {
+    max-width: 190px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px 14px;
+    font-size: 9px;
+  }
+
+  .home-hero h1 {
+    font-size: clamp(42px, 13vw, 58px);
+  }
+}

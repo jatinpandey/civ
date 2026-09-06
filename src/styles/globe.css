@@ -1,0 +1,41 @@
+.globe-wrap { max-width: 1440px; }
+.globe-heading { display:flex; justify-content:space-between; align-items:center; gap:24px; padding:32px 0 22px; }
+.eyebrow { font:10px var(--sans); color:var(--gold); letter-spacing:.14em; margin:0 0 12px; }
+.globe-heading h1 { font-size:clamp(30px,4vw,48px); font-weight:400; margin:0 0 10px; text-wrap:balance; }
+.intro { color:var(--dim); margin:0; font:14px/1.6 var(--sans); }
+.flat-link { font:12px var(--sans); white-space:nowrap; }
+.globe-layout { display:grid; grid-template-columns:minmax(0,1fr) 290px; gap:30px; }
+.globe-stage { position:relative; height: min(72vh,780px); min-height:440px; overflow:hidden; border:1px solid var(--line); border-radius:12px; background:#101721; }
+#globe { display:block; width:100%; height:100%; touch-action:none; cursor:grab; }
+#globe.dragging { cursor:grabbing; }
+.globe-tools { position:absolute; top:16px; left:16px; display:flex; align-items:center; gap:4px; padding:4px; background:#111923; border:1px solid #344454; border-radius:8px; font:12px var(--sans); }
+.globe-tools button { min-width:44px; height:44px; text-align:center; border-radius:4px; padding:0 10px; }
+.globe-tools button:first-child,.globe-tools button:nth-child(2) {font-size:22px;}
+.globe-tools button:hover { background:#263544; }
+.globe-tools button:disabled { opacity:.35; cursor:default; }
+#zoom-level {color:var(--dim); min-width:42px; text-align:center; font-variant-numeric:tabular-nums;}
+.gestures { position:absolute; bottom:16px; left:16px; right:16px; text-align:center; margin:0; font:11px/1.6 var(--sans); color:#aab9c7; pointer-events:none; }
+.load-state { position:absolute; top:45%; left:16px; right:16px; text-align:center; font:14px var(--sans); }
+.load-state button { padding:12px; text-decoration:underline; }
+.country-card { min-height:180px; padding:24px 0; border-bottom:1px solid var(--line); }
+.country-card h2 { margin:0 0 22px; font-size:30px; line-height:1.15; font-weight:400; overflow-wrap:anywhere; }
+.capital-label {font:10px var(--sans); color:var(--dim); letter-spacing:.12em; margin:0 0 8px;}
+#country-capital {font:16px/1.5 var(--sans); margin:0;}
+.country-search { margin-top:24px; font:12px var(--sans); }
+.country-search label {display:block; margin-bottom:10px;}
+.country-search input {width:100%; padding:13px; background:var(--bg2); color:var(--ink); border:1px solid var(--line2); border-radius:6px; font:14px var(--sans);}
+.result-count { color:var(--dim); font-size:11px; min-height:14px; }
+.country-results {max-height:230px; overflow:auto; overscroll-behavior:contain;}
+.country-results button {display:flex; flex-direction:column; gap:5px; width:100%; padding:12px; min-height:52px; border-bottom:1px solid var(--line); font:13px var(--sans); border-radius:4px;}
+.country-results button:hover,.country-results button[aria-pressed=true] {background:#1f2d37;}
+.country-results button span {color:var(--dim); font-size:11px;}
+.globe-note {font:11px/1.7 var(--sans); color:var(--dim); margin-top:22px;}
+@media(max-width:760px) {
+ .globe-heading {padding:24px 0 18px; align-items:flex-start;} .flat-link {display:none;}
+ .globe-layout {grid-template-columns:1fr;gap:0;} .globe-stage {height:56dvh;min-height:340px;max-height:560px;}
+ .globe-sidebar {display:grid;grid-template-columns:1fr;}.country-card {min-height:145px;padding:22px 0;}.country-card h2 {margin-bottom:14px;font-size:28px;}
+ .gestures {font-size:10px;bottom:12px;} .globe-tools {top:10px;left:10px;}
+ .country-results {max-height:210px;} .wordmark {font-size:9px;letter-spacing:.1em;}.mast nav {gap:14px;}
+}
+/* Keep instructions readable when zoomed land fills the viewport. */
+.gestures { background:#111923e8; border-radius:5px; padding:6px 10px; width:fit-content; max-width:calc(100% - 32px); margin-inline:auto; }

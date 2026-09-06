@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b0d12">
+<title>Countries and their capitals — Meanwhile in History</title>
+<meta name="description" content="Every border on Earth. Hover or tap any country to see its name and capital.">
+</head>
+<body>
+
+<div class="wrap">
+  <header class="mast">
+    <a class="wordmark" href="/">MEANWHILE IN HISTORY</a>
+    <nav aria-label="Main navigation">
+      <a href="/civilizations">CIVILIZATIONS</a>
+      <a href="/explore">EXPLORE</a>
+      <a href="/quiz">QUIZ</a>
+    </nav>
+  </header>
+</div>
+
+<div class="worldwrap" id="worldwrap"></div>
+
+<div class="worldtip hide" id="worldtip" role="status" aria-live="polite"></div>
+
+<div class="maptoast" id="maptoast" role="status">
+  <span>Drag to pan; scroll, pinch or double-click to zoom. Cities appear as you go in,
+    largest first.</span>
+  <button class="maptoast-x" id="maptoastx" aria-label="Dismiss">&#10005;</button>
+</div>
+
+<script type="module" src="/src/map-page.ts"></script>
+</body>
+</html>

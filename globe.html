@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b0d12">
+<title>World Globe — Meanwhile in History</title>
+<meta name="description" content="Turn a detailed 3D world globe. Explore country borders and discover capitals with a hover, tap, or search.">
+</head>
+<body>
+<div class="wrap globe-wrap">
+<header class="mast"><a class="wordmark" href="/">MEANWHILE IN HISTORY</a><nav aria-label="Main navigation"><a href="/civilizations">CIVILIZATIONS</a><a href="/explore">EXPLORE</a><a href="/quiz">QUIZ</a></nav></header>
+<main>
+<div class="globe-heading"><div><p class="eyebrow">THE WORLD IN YOUR HANDS</p><h1>A different perspective.</h1><p class="intro">Turn the globe. Find a country. Discover its capital.</p></div><a class="flat-link" href="/map">View flat map ↗</a></div>
+<div class="globe-layout">
+<section class="globe-stage" aria-label="Interactive world globe">
+<canvas id="globe" tabindex="0" aria-label="World globe. Drag to rotate, scroll or pinch to zoom. Arrow keys rotate; plus and minus zoom. Use country search for an accessible list." aria-describedby="gestures"></canvas>
+<div id="load-state" class="load-state" role="status">Loading the world…</div>
+<div class="globe-tools" aria-label="Globe controls"><button id="zoom-in" aria-label="Zoom in" title="Zoom in">+</button><button id="zoom-out" aria-label="Zoom out" title="Zoom out">−</button><button id="reset" title="Reset globe view">Reset</button><span id="zoom-level">1×</span></div>
+<p id="gestures" class="gestures">Drag to turn · Scroll or pinch to zoom · Hover or tap to explore</p>
+</section>
+<aside class="globe-sidebar">
+<div class="country-card" role="status" aria-live="polite" aria-atomic="true"><p class="eyebrow" id="selection-label">EXPLORE THE GLOBE</p><h2 id="country-name">Where to next?</h2><p class="capital-label" id="capital-label">COUNTRY & CAPITAL</p><p id="country-capital">Hover or tap a country to take a closer look.</p></div>
+<div class="country-search"><label for="country-search">Find a country or capital</label><input id="country-search" type="search" placeholder="Try India or Tokyo" autocomplete="off" aria-controls="country-results"><p id="result-count" class="result-count" role="status"></p><div id="country-results" class="country-results"></div></div>
+<p class="globe-note">Natural Earth 1:10m borders. Small dots help you select tiny countries and islands. Borders follow the source dataset; some are disputed.</p>
+</aside>
+</div>
+</main></div>
+<script type="module" src="/src/globe-page.ts"></script>
+</body></html>

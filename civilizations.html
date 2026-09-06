@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b0d12">
+<title>Civilizations — Meanwhile in History</title>
+<meta name="description" content="Twenty civilisations, twelve thousand years. Pick a place and read its history period by period — and see what every other civilisation was doing at that exact moment.">
+<meta property="og:title" content="Civilizations — Meanwhile in History">
+<meta property="og:description" content="Every civilisation's story, in one place. Twenty civilisations, over twelve thousand years, and what was happening everywhere else at the same moment.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+
+<div class="wrap">
+  <header class="mast">
+    <a class="wordmark" href="/">MEANWHILE IN HISTORY</a>
+    <nav aria-label="Main navigation">
+      <a href="/civilizations" aria-current="page">CIVILIZATIONS</a>
+      <a href="/explore">EXPLORE</a>
+      <a href="/quiz">QUIZ</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="hero">
+      <h1>Every civilisation's story, in one place.</h1>
+      <p>Pick a place on the map and browse its history, as well as iconic events in
+         each period.</p>
+    </section>
+
+    <div class="maphead">
+      <p class="prompt" id="prompt">TAP A CIVILISATION ON THE MAP TO BEGIN</p>
+      <div class="finder">
+        <input id="search" type="search" placeholder="Search civilisations…"
+               autocomplete="off" spellcheck="false" aria-label="Search civilisations"
+               aria-describedby="searchnote">
+        <span class="finder-note" id="searchnote"></span>
+      </div>
+    </div>
+
+    <div class="mapwrap" id="mapwrap"></div>
+
+    <section id="region" class="hide">
+      <div class="rhead">
+        <div class="ident">
+          <span class="ident-flag" id="rflag"></span>
+          <div class="ident-text">
+            <h2 id="rname"></h2>
+            <div class="ident-counts" id="rkick"></div>
+          </div>
+        </div>
+        <p id="rintro"></p>
+      </div>
+      <div class="tlouter">
+        <div class="tlbar">
+          <span class="tlhint">TAP ANY CARD OR EVENT</span>
+          <div class="tlnav">
+            <button id="scrollleft" class="tlbtn" aria-label="Scroll back" title="Scroll back">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg>
+            </button>
+            <button id="scrollright" class="tlbtn" aria-label="Scroll forward" title="Scroll forward">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="tlscroll" id="tlscroll"><div class="tlinner" id="tlinner"></div></div>
+      </div>
+      <div class="regionfoot">
+        <button class="backmap" id="backmap">↑ PICK ANOTHER CIVILISATION</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="sheet" id="drawer" role="dialog" aria-modal="true" aria-label="Details"></aside>
+
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>

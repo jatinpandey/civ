@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0b0d12">
+<title>Capitals quiz — Meanwhile in History</title>
+<meta name="description" content="Name the capital. Pick the continents you want and work through the countries in them.">
+</head>
+<body class="quiz-page">
+
+<div class="wrap">
+  <header class="mast">
+    <a class="wordmark" href="/">MEANWHILE IN HISTORY</a>
+    <nav aria-label="Main navigation">
+      <a href="/civilizations">CIVILIZATIONS</a>
+      <a href="/explore">EXPLORE</a>
+      <a href="/quiz" aria-current="page">QUIZ</a>
+    </nav>
+  </header>
+
+  <section class="pagehead">
+    <h1>Name the capital</h1>
+    <p class="qrunning hide" id="qrunning" role="status" aria-live="polite"></p>
+  </section>
+
+  <section class="qsetup" id="qsetup">
+    <p class="qlead">Pick your continents and select the correct capital for every country you see!</p>
+    <div class="qcontinents" id="qcontinents" role="group"
+         aria-label="Continents to include"></div>
+    <div class="qstartrow">
+      <button class="qstart" id="qstart" disabled>START QUIZ</button>
+      <span class="qtotal" id="qtotal"></span>
+    </div>
+  </section>
+
+  <section class="quiz hide" id="quiz">
+    <div class="qplayhead">
+      <p class="qcount" id="qcount"></p>
+    </div>
+    <div class="qquestionhead">
+      <h2 class="qcountry" id="qcountry"></h2>
+      <span class="qverdict" id="qverdict" role="status" aria-live="polite"></span>
+    </div>
+    <div class="qoptions" id="qoptions"></div>
+    <div class="qafter">
+      <button class="qnext hide" id="qnext">NEXT →</button>
+    </div>
+    <div class="qsession-actions">
+      <button class="qexit" id="qexit">EXIT</button>
+    </div>
+  </section>
+
+  <section class="qdone hide" id="qdone">
+    <p class="qcount" id="qfinalset"></p>
+    <h2 class="qscore" id="qscore"></h2>
+    <p class="qscoreline" id="qscoreline"></p>
+    <button class="qstart" id="qagain">START AGAIN</button>
+    <section class="qreview hide" id="qreview" aria-labelledby="qreview-title">
+      <h3 id="qreview-title">Answer review</h3>
+      <div class="qreview-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Country</th>
+              <th scope="col">Capital</th>
+              <th scope="col">Your answer</th>
+              <th scope="col">Result</th>
+            </tr>
+          </thead>
+          <tbody id="qreview-rows"></tbody>
+        </table>
+      </div>
+    </section>
+  </section>
+</div>
+
+<script type="module" src="/src/quiz-page.ts"></script>
+</body>
+</html>
