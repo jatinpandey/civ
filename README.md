@@ -1,4 +1,4 @@
-# Meanwhile in History
+# Civ
 
 Twenty civilisations, twelve thousand years. Pick a civilisation and its political
 history unrolls left to right, one card per period, with the landmarks and world
