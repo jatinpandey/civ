@@ -2,6 +2,7 @@ import "./styles/tokens.css";
 import "./styles/app.css";
 
 import { CONTINENTS, QUESTIONS, continentLabel } from "./data/quiz";
+import { COUNTRIES, MAP_H, MAP_W } from "./data/countries";
 import type { Continent, Question } from "./data/quiz";
 import { initAnalytics } from "./lib/analytics";
 import { esc } from "./lib/format";
@@ -27,11 +28,13 @@ const totalEl = el("qtotal");
 const quizEl = el("quiz");
 const doneEl = el("qdone");
 const countryEl = el("qcountry");
+const mapEl = el("qmap");
 const optionsEl = el("qoptions");
 const verdictEl = el("qverdict");
 const nextEl = el("qnext");
 const countEl = el("qcount");
 const runningEl = el("qrunning");
+const headEl = el("qpagehead");
 const exitEl = el("qexit") as HTMLButtonElement;
 
 /** Continents stay in their fixed order; picking one only highlights it. */
@@ -93,6 +96,7 @@ function toSetup(): void {
   quizEl.classList.add("hide");
   doneEl.classList.add("hide");
   runningEl.classList.add("hide");
+  headEl.classList.remove("playing");
   drawContinents(false);
   refreshStart();
 }
@@ -108,9 +112,42 @@ function start(): void {
   doneEl.classList.add("hide");
   quizEl.classList.remove("hide");
   runningEl.classList.remove("hide");
+  /* The country being asked is the heading on this screen; the page title
+     would only repeat it and push the question down. */
+  headEl.classList.add("playing");
   drawContinents(true);          // locked in for the set
   trackQuizStarted([...chosen].map(continentLabel));
   ask();
+}
+
+/* ------------------------------------------------------------- map ------ */
+
+/**
+ * The same outlines the /map page draws, in the same projection, so a stored
+ * capital position lands exactly on its city. Built once: a question only
+ * moves the window and the dot, which beats redrawing 240 paths each time.
+ */
+const mapSvg = (() => {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", `0 0 ${MAP_W} ${MAP_H}`);
+  svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+  svg.innerHTML =
+    `<g class="qmap-land">${COUNTRIES.map((c) => `<path d="${c.d}"/>`).join("")}</g>` +
+    `<circle class="qmap-dot" cx="0" cy="0" r="0"/>`;
+  mapEl.append(svg);
+  return svg;
+})();
+const mapDot = mapSvg.querySelector("circle") as SVGCircleElement;
+
+function drawMapFor(q: Question): void {
+  const [x, y, w, h] = q.v;
+  mapSvg.setAttribute("viewBox", `${x} ${y} ${w} ${h}`);
+  mapDot.setAttribute("cx", String(q.p[0]));
+  mapDot.setAttribute("cy", String(q.p[1]));
+  /* Sized against the window, so the dot looks the same whether the frame is
+     Monaco's or Russia's. */
+  mapDot.setAttribute("r", String(w / 110));
+  mapDot.setAttribute("stroke-width", String(w / 380));
 }
 
 function ask(): void {
@@ -122,6 +159,7 @@ function ask(): void {
   countEl.textContent = questionProgress(at, set.length);
   runningEl.textContent = runningScore(right, at);
   countryEl.textContent = q.n;
+  drawMapFor(q);
   verdictEl.textContent = "";
   verdictEl.className = "qverdict";
   nextEl.classList.add("hide");
@@ -162,6 +200,7 @@ function finish(outcome: QuizOutcome): void {
   quizEl.classList.add("hide");
   doneEl.classList.remove("hide");
   runningEl.classList.add("hide");
+  headEl.classList.remove("playing");
   const completed = completedQuestions(at, answered, set.length);
   const pct = completed === 0 ? 0 : Math.round((right / completed) * 100);
   /* Listed in the page's own order, not the order they were clicked. */

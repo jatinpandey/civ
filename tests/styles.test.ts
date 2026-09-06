@@ -28,7 +28,7 @@ const REQUIRED = [
   ".meta", ".simul", ".simul-go",
   ".about",
   ".qcontinents", ".qchip", ".quiz", ".qcountry", ".qoptions", ".qopt",
-  ".qverdict", ".qnext", ".qsetup", ".qlead", ".qstart", ".qstartrow",
+  ".qverdict", ".qnext", ".qmap", ".qmap-land", ".qmap-dot", ".qsetup", ".qlead", ".qstart", ".qstartrow",
   ".qtotal", ".qdone", ".qscore", ".qscoreline",
   ".pagehead", ".worldwrap", ".cty", ".marker", ".city", ".worldtip", ".tip-name", ".tip-cap",
   ".maptoast", ".maptoast-x",

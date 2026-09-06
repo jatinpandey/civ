@@ -12,7 +12,8 @@
  */
 import fs from "node:fs";
 import { createRequire } from "node:module";
-import { geoArea, geoMercator, geoPath } from "d3-geo";
+import { geoArea } from "d3-geo";
+import { H, LAT_BOTTOM, LAT_TOP, MARGIN, path, projection, W } from "./lib/projection.mjs";
 import { feature } from "topojson-client";
 
 const require = createRequire(import.meta.url);
@@ -20,21 +21,6 @@ const topo = require("world-atlas/countries-50m.json");
 const detail = require("world-atlas/countries-10m.json");
 const world = require("world-countries");
 const cities = require("all-the-cities");
-
-/**
- * A 40000-unit frame with whole-unit coordinates, written as relative moves.
- *
- * Frame size is what stops edges looking like staircases: a coordinate can
- * only land on a whole unit, so at 8000 units a coastline stepped in visible
- * 4-5px jumps once you were 30x in. At 40000 those steps are under a pixel.
- * Relative deltas are small numbers that compress far better than absolute
- * ones, so the finer map is also the smaller file - 624 KB against 653 KB.
- */
-const W = 40000;
-const MARGIN = 60;
-/** Mercator runs to infinity at the poles, so the frame is cut here. */
-const LAT_TOP = 78;
-const LAT_BOTTOM = -57;
 
 /** Antarctica has no capital, no hover value, and would dominate the frame. */
 const EXCLUDE = new Set(["010"]);
@@ -45,22 +31,9 @@ const shown = {
   features: fc.features.filter((f) => !EXCLUDE.has(String(f.id))),
 };
 
-/**
- * Mercator, as every web map uses. It is conformal: shapes stay locally
- * correct at any zoom, which is the property that matters on a map you can
- * zoom into. Equal Earth, which this used before, is equal-area instead, and
- * pays for that by squashing everything above about 50 degrees - Russia came
- * out visibly flattened.
- */
-const projection = geoMercator().scale(1).translate([0, 0]);
-const spanX = projection([180, 0])[0] - projection([-180, 0])[0];
-projection.scale((W - MARGIN * 2) / spanX);
-const yTop = projection([0, LAT_TOP])[1];
-const yBottom = projection([0, LAT_BOTTOM])[1];
-projection.translate([W / 2, MARGIN - yTop]);
-const H = Math.ceil(yBottom - yTop + MARGIN * 2);
-
-const draw = geoPath(projection);
+/* The frame, the projection and the path generator are shared with
+   build-quiz.mjs so the capital dots land on the same pixels as the shapes. */
+const draw = path;
 /**
  * Absolute "M x,y L x,y ..." to relative "M x y l dx dy ...". Each absolute
  * position is rounded first and the delta taken between rounded values, so

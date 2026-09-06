@@ -513,6 +513,10 @@ a { color: var(--gold); text-underline-offset: 3px; }
 /* ---------- world map page ---------- */
 /* No max-width: the heading takes the same margin on the right as on the left. */
 .pagehead { padding: 46px 0 8px; }
+/* On the question screen the country is the heading, so the page title goes
+   and the head collapses to just the running score. */
+.pagehead.playing h1 { display: none; }
+.pagehead.playing { padding: 22px 0 0; }
 .pagehead h1 {
   font-size: clamp(32px, 5.4vw, 50px);
   line-height: 1.04;
@@ -750,6 +754,11 @@ a { color: var(--gold); text-underline-offset: 3px; }
 .qdone {
   width: 100%;
   max-width: 44em;
+}
+/* In-progress and results screens stay centered; the landing screen
+   (pagehead + setup) is left-aligned to match the civilizations/home pages. */
+.quiz,
+.qdone {
   margin-left: auto;
   margin-right: auto;
 }
@@ -868,6 +877,19 @@ a { color: var(--gold); text-underline-offset: 3px; }
   gap: 12px 18px;
   margin: 0 0 30px;
 }
+/* Where the capital is, next to the question about its name. */
+.qmap {
+  max-width: 44em;
+  margin: 0 0 22px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  overflow: hidden;
+  background: #142130;
+}
+.qmap svg { display: block; width: 100%; height: auto; max-height: 230px; }
+.qmap-land path { fill: #33424f; stroke: #5a6c81; stroke-width: 1; vector-effect: non-scaling-stroke; }
+.qmap-dot { fill: #d2684a; stroke: #f4e6df; vector-effect: non-scaling-stroke; }
+
 .qoptions {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
