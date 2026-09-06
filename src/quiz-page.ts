@@ -24,7 +24,7 @@ const el = (id: string): HTMLElement =>
 const setupEl = el("qsetup");
 const contsEl = el("qcontinents");
 const startEl = el("qstart") as HTMLButtonElement;
-const totalEl = el("qtotal");
+// const totalEl = el("qtotal");
 const quizEl = el("quiz");
 const doneEl = el("qdone");
 const countryEl = el("qcountry");
