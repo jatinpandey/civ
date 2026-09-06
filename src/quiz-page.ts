@@ -88,7 +88,7 @@ function toggle(c: Continent): void {
 function refreshStart(): void {
   const n = [...chosen].reduce((sum, c) => sum + countIn(c), 0);
   startEl.disabled = n === 0;
-  totalEl.textContent = n === 0 ? "" : `${n} countries`;
+  // totalEl.textContent = n === 0 ? "" : `${n} countries`;
 }
 
 function toSetup(): void {
